@@ -194,3 +194,7 @@ export function showRoyaltyFieldset(paramNames: string[]) {
 export function showPrimarySaleFiedset(paramNames: string[]) {
   return paramNames.length === 1 && paramNames.includes("primarySaleRecipient");
 }
+
+export function showSuperchainBridgeFieldset(paramNames: string[]) {
+  return paramNames.length === 1 && paramNames.includes("superchainBridge");
+}

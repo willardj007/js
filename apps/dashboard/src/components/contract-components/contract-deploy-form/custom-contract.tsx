@@ -174,6 +174,10 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
     !isFactoryDeployment &&
     (metadata?.name.includes("AccountFactory") || false);
 
+  const isSuperchainInterop = !!modules?.find(
+    (m) => m.name === "SuperChainInterop",
+  );
+
   const parsedDeployParams = useMemo(
     () => ({
       ...deployParams.reduce(
@@ -430,11 +434,14 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
         _contractURI,
       };
 
-      const salt = params.deployDeterministic
-        ? params.signerAsSalt
-          ? activeAccount.address.concat(params.saltForCreate2)
-          : params.saltForCreate2
-        : undefined;
+      // TODO: discuss how to handle the salt properly for crosschain contracts
+      const salt = isSuperchainInterop
+        ? "thirdweb"
+        : params.deployDeterministic
+          ? params.signerAsSalt
+            ? activeAccount.address.concat(params.saltForCreate2)
+            : params.saltForCreate2
+          : undefined;
 
       return await deployContractfromDeployMetadata({
         account: activeAccount,
