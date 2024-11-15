@@ -15,6 +15,7 @@ export function TeamSettingsSidebar(props: {
   const accountGroupLinks = teamLinks.filter(
     (link) => link.group === "account",
   );
+  const chainGroupLinks = teamLinks.filter((link) => link.group === "chain");
 
   return (
     <aside className="lg:-ml-2 sticky top-0 hidden w-[250px] shrink-0 grow-0 flex-col gap-4 self-start lg:flex">
@@ -39,12 +40,12 @@ export function TeamSettingsSidebar(props: {
         client={props.client}
       />
       <RenderLinkGroup
-        links={accountGroupLinks}
+        links={chainGroupLinks}
         title="Chain"
         team={props.team}
         titleAvatarIcon={{
-          id: props.account?.id,
-          src: "", // TODO - set account image
+          id: props.team.id,
+          src: props.team.image || "",
         }}
         client={props.client}
       />
