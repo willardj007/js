@@ -38,6 +38,16 @@ export function TeamSettingsSidebar(props: {
         }}
         client={props.client}
       />
+      <RenderLinkGroup
+        links={accountGroupLinks}
+        title="Chain"
+        team={props.team}
+        titleAvatarIcon={{
+          id: props.account?.id,
+          src: "", // TODO - set account image
+        }}
+        client={props.client}
+      />
     </aside>
   );
 }

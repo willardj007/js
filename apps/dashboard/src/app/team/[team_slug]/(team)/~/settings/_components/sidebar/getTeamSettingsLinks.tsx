@@ -4,7 +4,7 @@ export function getTeamSettingsLinks(teamSlug: string) {
   const teamLinks: Array<{
     name: string;
     href: string;
-    group: "team" | "account";
+    group: "team" | "account" | "chain";
   }> = [
     {
       name: "General",
@@ -30,6 +30,16 @@ export function getTeamSettingsLinks(teamSlug: string) {
       name: "My Notifications",
       href: `${prefix}/notifications`,
       group: "account",
+    },
+    {
+      name: "Chain Onboarding",
+      href: `${prefix}/chainOnboarding`,
+      group: "chain",
+    },
+    {
+      name: "Chain Guides",
+      href: `${prefix}/chainGuides`,
+      group: "chain",
     },
   ];
 
