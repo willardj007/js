@@ -1,6 +1,5 @@
 "use client";
 
-import type { UserOpStats } from "@/api/analytics";
 import { ExportToCSVButton } from "@/components/blocks/ExportToCSVButton";
 import {
   type ChartConfig,
@@ -24,6 +23,7 @@ import { format } from "date-fns";
 import { useAllChainsData } from "hooks/chains/allChains";
 import { useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import type { UserOpStats } from "types/analytics";
 import { formatTickerNumber } from "../../../lib/format-utils";
 
 type ChartData = Record<string, number> & {
@@ -145,43 +145,7 @@ export function SponsoredTransactionsChartCard(props: {
         ) : chartData.length === 0 ||
           chartData.every((data) => data.transactions === 0) ? (
           <EmptyChartState>
-            <div className="flex flex-col items-center justify-center">
-              <span className="mb-6 text-lg">
-                Send your first sponsored transaction
-              </span>
-              <div className="flex max-w-md flex-wrap items-center justify-center gap-x-6 gap-y-4">
-                <DocLink
-                  link="https://portal.thirdweb.com/typescript/v5/account-abstraction/batching-transactions"
-                  label="TypeScript"
-                  icon={TypeScriptIcon}
-                />
-                <DocLink
-                  link="https://portal.thirdweb.com/react/v5/account-abstraction/batching-transactions"
-                  label="React"
-                  icon={ReactIcon}
-                />
-                <DocLink
-                  link="https://portal.thirdweb.com/react/v5/account-abstraction/get-started"
-                  label="React Native"
-                  icon={ReactIcon}
-                />
-                <DocLink
-                  link="https://portal.thirdweb.com/unity/v5/wallets/account-abstraction"
-                  label="Unity"
-                  icon={UnityIcon}
-                />
-                <DocLink
-                  link="https://portal.thirdweb.com/unreal-engine/blueprints/smart-wallet"
-                  label="Unreal Engine"
-                  icon={UnrealIcon}
-                />
-                <DocLink
-                  link="https://portal.thirdweb.com/dotnet/wallets/providers/account-abstraction"
-                  label=".NET"
-                  icon={DotNetIcon}
-                />
-              </div>
-            </div>
+            <EmptyAccountAbstractionChartContent />
           </EmptyChartState>
         ) : (
           <BarChart
@@ -237,6 +201,48 @@ export function SponsoredTransactionsChartCard(props: {
           </BarChart>
         )}
       </ChartContainer>
+    </div>
+  );
+}
+
+export function EmptyAccountAbstractionChartContent() {
+  return (
+    <div className="flex flex-col items-center justify-center">
+      <span className="mb-6 text-lg">
+        Send your first sponsored transaction
+      </span>
+      <div className="flex max-w-md flex-wrap items-center justify-center gap-x-6 gap-y-4">
+        <DocLink
+          link="https://portal.thirdweb.com/typescript/v5/account-abstraction/batching-transactions"
+          label="TypeScript"
+          icon={TypeScriptIcon}
+        />
+        <DocLink
+          link="https://portal.thirdweb.com/react/v5/account-abstraction/batching-transactions"
+          label="React"
+          icon={ReactIcon}
+        />
+        <DocLink
+          link="https://portal.thirdweb.com/react/v5/account-abstraction/get-started"
+          label="React Native"
+          icon={ReactIcon}
+        />
+        <DocLink
+          link="https://portal.thirdweb.com/unity/v5/wallets/account-abstraction"
+          label="Unity"
+          icon={UnityIcon}
+        />
+        <DocLink
+          link="https://portal.thirdweb.com/unreal-engine/blueprints/smart-wallet"
+          label="Unreal Engine"
+          icon={UnrealIcon}
+        />
+        <DocLink
+          link="https://portal.thirdweb.com/dotnet/wallets/providers/account-abstraction"
+          label=".NET"
+          icon={DotNetIcon}
+        />
+      </div>
     </div>
   );
 }

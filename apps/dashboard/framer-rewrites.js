@@ -2,9 +2,11 @@
 module.exports = [
   // -- home
   "/",
+  "/pricing",
   // -- product landing pages --
   // -- connect
   "/connect/sign-in",
+  "/nebula",
   // -- contracts
   "/contracts/modular-contracts",
   "/contracts/explore",
@@ -15,6 +17,7 @@ module.exports = [
   "/solutions/gaming",
   "/solutions/consumer-apps",
   "/solutions/defi",
+  "/solutions/ecosystem",
   // -- campaigns --
   "/unlimited-wallets",
 ];

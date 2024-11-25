@@ -1,5 +1,176 @@
 # thirdweb
 
+## 5.71.0
+
+### Minor Changes
+
+- [#5501](https://github.com/thirdweb-dev/js/pull/5501) [`ac42c45`](https://github.com/thirdweb-dev/js/commit/ac42c4538ef41cc842d2fd723471c21d865ee411) Thanks [@gregfromstl](https://github.com/gregfromstl)! - Added new deployment utility functions to help manage infrastructure contracts and initialization:
+
+  - `getInitializeTransaction`: Prepare initialization transaction for contract deployment
+  - `getOrDeployInfraForPublishedContract`: Get or deploy required infrastructure for published contracts
+
+  ```typescript
+  import {
+    getInitializeTransaction,
+    getOrDeployInfraForPublishedContract,
+  } from "thirdweb";
+
+  // Get initialization transaction
+  const initTx = await getInitializeTransaction({
+    client,
+    chain,
+    account,
+    implementationContract,
+    deployMetadata,
+    initializeParams: {
+      name: "My Contract",
+      symbol: "CNTRCT",
+    },
+  });
+
+  // Get or deploy infrastructure
+  const infra = await getOrDeployInfraForPublishedContract({
+    chain,
+    client,
+    account,
+    contractId: "MyContract",
+    constructorParams: params,
+  });
+  ```
+
+## 5.70.1
+
+### Patch Changes
+
+- [#5482](https://github.com/thirdweb-dev/js/pull/5482) [`b5baeae`](https://github.com/thirdweb-dev/js/commit/b5baeae821fffeb2dfb23269715066a0110b00c2) Thanks [@joaquim-verges](https://github.com/joaquim-verges)! - Expose utilities to decode errors and function data
+
+- [#5493](https://github.com/thirdweb-dev/js/pull/5493) [`d9a63a6`](https://github.com/thirdweb-dev/js/commit/d9a63a6d351459e1cae9c1e3cb9d005ac165a5d9) Thanks [@kien-ngo](https://github.com/kien-ngo)! - Fix props not getting passed to TokenIcon
+
+- [#5498](https://github.com/thirdweb-dev/js/pull/5498) [`6b6f617`](https://github.com/thirdweb-dev/js/commit/6b6f61705d4561f44338d08e379c71e64a05ed6b) Thanks [@ElasticBottle](https://github.com/ElasticBottle)! - enable private key export for enclave wallets upon initial login
+
+## 5.70.0
+
+### Minor Changes
+
+- [#5388](https://github.com/thirdweb-dev/js/pull/5388) [`901c3a1`](https://github.com/thirdweb-dev/js/commit/901c3a102b81d52297b25a72600f4a3a22dabc14) Thanks [@kien-ngo](https://github.com/kien-ngo)! - Add headless UI component: Account (Name, Image, Address, Balance)
+
+- [#5374](https://github.com/thirdweb-dev/js/pull/5374) [`0e5d120`](https://github.com/thirdweb-dev/js/commit/0e5d120909c19398b8ce3cc73d11a5fb2fd85782) Thanks [@joaquim-verges](https://github.com/joaquim-verges)! - # Breaking change
+
+  We are making the following changes to the NFT component to provide better performance and fine-grain control over their internal fetching logic.
+  Moreover, you no longer have to wrap React.Suspense around said components!
+
+  ### Old
+
+  ```tsx
+  <NFT>
+    <React.Suspense fallback={"Loading stuff..."}>
+      <NFT.Media />
+      <NFT.Name />
+      <NFT.Description />
+    </React.Suspense>
+  </NFT>
+  ```
+
+  ### New
+
+  The new version comes with 2 new props: `loadingComponent` and `fallbackComponent`.
+  Basically, `loadingComponent` takes in a component and show it _while the internal fetching is being done_
+  `fallbackComponent` takes in a component and show it _once the data is failed to be resolved_
+
+  ```tsx
+  <NFTProvider contract={contract} tokenId={0n}>
+      <NFTMedia
+        loadingComponent={<span>Loading NFT Image</span>}
+        fallbackComponent={<span>Failed to load NFT</span>}
+      />
+      <NFTDescription
+        loadingComponent={<span>Loading NFT Description</span>}
+        fallbackComponent={<span>Failed to load NFT Description</span>}
+      />
+  </NFT>
+  ```
+
+### Patch Changes
+
+- [#5463](https://github.com/thirdweb-dev/js/pull/5463) [`f368793`](https://github.com/thirdweb-dev/js/commit/f368793375d099eec53569330af7a083e558e483) Thanks [@gregfromstl](https://github.com/gregfromstl)! - Fixes PayEmbed error state appearing on certain errors
+
+- [#5464](https://github.com/thirdweb-dev/js/pull/5464) [`b5227c9`](https://github.com/thirdweb-dev/js/commit/b5227c9a8fb4b4b4114c79077c2c1ba38fbad55f) Thanks [@gregfromstl](https://github.com/gregfromstl)! - Adds the ability to override transaction values in createNewPack
+
+## 5.69.0
+
+### Minor Changes
+
+- [#5415](https://github.com/thirdweb-dev/js/pull/5415) [`7b21f1b`](https://github.com/thirdweb-dev/js/commit/7b21f1b632d65a2bc9bc38656e18d220c6201ed9) Thanks [@gregfromstl](https://github.com/gregfromstl)! - Adds steam auth
+
+- [#5415](https://github.com/thirdweb-dev/js/pull/5415) [`7b21f1b`](https://github.com/thirdweb-dev/js/commit/7b21f1b632d65a2bc9bc38656e18d220c6201ed9) Thanks [@gregfromstl](https://github.com/gregfromstl)! - Adds Steam as an authentication option
+
+### Patch Changes
+
+- [#5397](https://github.com/thirdweb-dev/js/pull/5397) [`895b4d1`](https://github.com/thirdweb-dev/js/commit/895b4d145fb0519febdb399abffea36208692d95) Thanks [@MananTank](https://github.com/MananTank)! - Catch localStorage getItem and setItem unhandled errors
+
+- [#5440](https://github.com/thirdweb-dev/js/pull/5440) [`f01de73`](https://github.com/thirdweb-dev/js/commit/f01de732fbf726cc0114dc645414f0ee6a37eb8e) Thanks [@joaquim-verges](https://github.com/joaquim-verges)! - Support erc6492 signature verification on zksync
+
+## 5.68.0
+
+### Minor Changes
+
+- [#5354](https://github.com/thirdweb-dev/js/pull/5354) [`a1fc436`](https://github.com/thirdweb-dev/js/commit/a1fc436a92eb5fccbbcf5b3e8b8fbea3343d14e0) Thanks [@joaquim-verges](https://github.com/joaquim-verges)! - Adds EIP1193 adapters that allow conversion between Thirdweb wallets and EIP-1193 providers:
+
+  - `EIP1193.fromProvider()`: Creates a Thirdweb wallet from any EIP-1193 compatible provider (like MetaMask, WalletConnect)
+  - `EIP1193.toProvider()`: Converts a Thirdweb wallet into an EIP-1193 provider that can be used with any web3 library
+
+  Key features:
+
+  - Full EIP-1193 compliance for seamless integration
+  - Handles account management (connect, disconnect, chain switching)
+  - Supports all standard Ethereum JSON-RPC methods
+  - Comprehensive event system for state changes
+  - Type-safe interfaces with full TypeScript support
+
+  Examples:
+
+  ```ts
+  // Convert MetaMask's provider to a Thirdweb wallet
+  const wallet = EIP1193.fromProvider({
+    provider: window.ethereum,
+    walletId: "io.metamask",
+  });
+
+  // Use like any other Thirdweb wallet
+  const account = await wallet.connect({
+    client: createThirdwebClient({ clientId: "..." }),
+  });
+
+  // Convert a Thirdweb wallet to an EIP-1193 provider
+  const provider = EIP1193.toProvider({
+    wallet,
+    chain: ethereum,
+    client: createThirdwebClient({ clientId: "..." }),
+  });
+
+  // Use with any EIP-1193 compatible library
+  const accounts = await provider.request({
+    method: "eth_requestAccounts",
+  });
+
+  // Listen for events
+  provider.on("accountsChanged", (accounts) => {
+    console.log("Active accounts:", accounts);
+  });
+  ```
+
+### Patch Changes
+
+- [#5335](https://github.com/thirdweb-dev/js/pull/5335) [`1e7e32f`](https://github.com/thirdweb-dev/js/commit/1e7e32f2cbb23dad48eda6e1224c09df89fc249d) Thanks [@joaquim-verges](https://github.com/joaquim-verges)! - Added global transaction decorator, better eip712 transaction support
+
+- [#5349](https://github.com/thirdweb-dev/js/pull/5349) [`46d0b4b`](https://github.com/thirdweb-dev/js/commit/46d0b4bdc050b92886cfea5623a08aa8f7272006) Thanks [@joaquim-verges](https://github.com/joaquim-verges)! - Use maxFeePerGas for Pay gas cost estimations in transaction flow
+
+- [#5366](https://github.com/thirdweb-dev/js/pull/5366) [`ef56304`](https://github.com/thirdweb-dev/js/commit/ef563041954958a6ae6fa58a4e2c1edd7ea88940) Thanks [@gregfromstl](https://github.com/gregfromstl)! - Adds ox for internal utilities
+
+- [#5390](https://github.com/thirdweb-dev/js/pull/5390) [`6771cfe`](https://github.com/thirdweb-dev/js/commit/6771cfed62aedce6ccb22e3c092f117a1b7e4242) Thanks [@ElasticBottle](https://github.com/ElasticBottle)! - fix enclave transaction signing for transactions with 0 maxPriorityFeePerGas
+
+- [#5343](https://github.com/thirdweb-dev/js/pull/5343) [`5de5418`](https://github.com/thirdweb-dev/js/commit/5de541878cfd4102baa049a0d84ce9911746ac6c) Thanks [@gregfromstl](https://github.com/gregfromstl)! - Adds chain ID to tracked analytics
+
 ## 5.67.0
 
 ### Minor Changes
@@ -980,7 +1151,7 @@
 
   <NFT contract={contract} tokenId={0n}>
     <Suspense fallback={"Loading media..."}>
-      <NFT.Media />
+      <NFTMedia />
     </Suspense>
   </NFT>;
   ```

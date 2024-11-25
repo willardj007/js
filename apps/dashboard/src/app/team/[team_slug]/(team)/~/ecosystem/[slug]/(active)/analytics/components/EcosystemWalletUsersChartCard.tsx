@@ -1,5 +1,4 @@
 "use client";
-import type { EcosystemWalletStats } from "@/api/analytics";
 import { ExportToCSVButton } from "@/components/blocks/ExportToCSVButton";
 import {
   type ChartConfig,
@@ -21,6 +20,7 @@ import { format } from "date-fns";
 import { formatTickerNumber } from "lib/format-utils";
 import { useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import type { EcosystemWalletStats } from "types/analytics";
 
 type ChartData = Record<string, number> & {
   time: string; // human readable date
@@ -154,8 +154,8 @@ export function EcosystemWalletUsersChartCard(props: {
             chartData.every((data) => data[authMethod] === 0),
           ) ? (
           <EmptyChartState>
-            <div className="flex flex-col items-center justify-center">
-              <span className="mb-6 text-lg">
+            <div className="flex flex-col items-center justify-center px-4">
+              <span className="mb-6 text-center text-lg">
                 Connect users to your app with social logins
               </span>
               <div className="flex max-w-md flex-wrap items-center justify-center gap-x-6 gap-y-4">

@@ -1,11 +1,7 @@
 export const subgroups = {
-  components: "Components",
-  hooks: "Hooks",
-  classes: "Classes",
-  functions: "Functions",
-  variables: "Variables",
-  types: "Types",
-  enums: "Enums",
+  components: "UI Components",
+  hooks: "React Hooks",
+  functions: "Core Functions",
 };
 
 export const nameToSubgroupSlug = (() => {

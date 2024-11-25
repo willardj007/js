@@ -4,6 +4,7 @@ import { UnexpectedValueErrorMessage } from "@/components/blocks/error-fallbacks
 import { WalletAddress } from "@/components/blocks/wallet-address";
 import { CopyTextButton } from "@/components/ui/CopyTextButton";
 import { Spinner } from "@/components/ui/Spinner/Spinner";
+import { CodeClient } from "@/components/ui/code/code.client";
 import { useThirdwebClient } from "@/constants/thirdweb.client";
 import { useDashboardRouter } from "@/lib/DashboardRouter";
 import { resolveSchemeWithErrorHandler } from "@/lib/resolveSchemeWithErrorHandler";
@@ -26,7 +27,8 @@ import type { ThirdwebContract } from "thirdweb";
 import { getNFT as getErc721NFT } from "thirdweb/extensions/erc721";
 import { getNFT as getErc1155NFT } from "thirdweb/extensions/erc1155";
 import { useReadContract } from "thirdweb/react";
-import { Badge, Button, Card, CodeBlock, Heading, Text } from "tw-components";
+import {} from "tw-components";
+import { Button, Card, Heading, Text } from "tw-components";
 import { NFTMediaWithEmptyState } from "tw-components/nft-media";
 import { shortenString } from "utils/usedapp-external";
 import { NftProperty } from "../components/nft-property";
@@ -236,11 +238,7 @@ export const TokenIdPage: React.FC<TokenIdPageProps> = ({
                 <GridItem colSpan={4}>
                   <Heading size="label.md">Token Standard</Heading>
                 </GridItem>
-                <GridItem colSpan={8}>
-                  <Badge size="label.sm" variant="subtle">
-                    {nft.type}
-                  </Badge>
-                </GridItem>
+                <GridItem colSpan={8}>{nft.type}</GridItem>
                 {nft.type !== "ERC721" && (
                   <>
                     <GridItem colSpan={4}>
@@ -314,12 +312,9 @@ export const TokenIdPage: React.FC<TokenIdPageProps> = ({
                     ))}
                   </SimpleGrid>
                 ) : (
-                  <CodeBlock
+                  <CodeClient
                     code={JSON.stringify(properties, null, 2) || ""}
-                    language="json"
-                    canCopy={false}
-                    wrap={false}
-                    overflow="auto"
+                    lang="json"
                   />
                 )}
               </Card>

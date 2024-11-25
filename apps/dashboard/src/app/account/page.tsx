@@ -1,19 +1,16 @@
 import { getTeams } from "@/api/team";
 import { getMembers } from "@/api/team-members";
 import { getThirdwebClient } from "@/constants/thirdweb.server";
-import { BillingAlerts } from "components/settings/Account/Billing/alerts/Alert";
-import { redirect } from "next/navigation";
+import { loginRedirect } from "../login/loginRedirect";
 import { AccountTeamsUI } from "./overview/AccountTeamsUI";
-import { getAccount } from "./settings/getAccount";
+import { getValidAccount } from "./settings/getAccount";
 
 export default async function Page() {
-  const account = await getAccount();
-
-  if (!account) {
-    redirect("/login?next=/account");
-  }
-
+  const account = await getValidAccount("/account");
   const teams = await getTeams();
+  if (!teams) {
+    loginRedirect("/account");
+  }
 
   const teamsWithRole = (
     await Promise.all(
@@ -40,7 +37,6 @@ export default async function Page() {
 
   return (
     <div className="container grow py-8">
-      <BillingAlerts className="mb-10" />
       <AccountTeamsUI
         teamsWithRole={teamsWithRole}
         client={getThirdwebClient()}

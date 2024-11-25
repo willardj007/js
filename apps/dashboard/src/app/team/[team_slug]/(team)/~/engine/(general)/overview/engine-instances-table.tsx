@@ -168,7 +168,8 @@ export const EngineInstancesTable: React.FC<EngineInstancesTableProps> = ({
             isDestructive: true,
           },
         ]}
-        bodyRowClassName="hover:bg-muted/50 relative"
+        bodyRowClassName="hover:bg-muted/50"
+        bodyRowLinkBox
       />
 
       {instanceToUpdate && (
@@ -464,7 +465,7 @@ function DeleteSubscriptionModalContent(props: {
         <div className="h-4" />
 
         <Alert variant="destructive">
-          <TriangleAlertIcon className="!text-destructive-text size-5" />
+          <TriangleAlertIcon className="!text-destructive-text size-4" />
           <AlertTitle>This action is irreversible!</AlertTitle>
 
           <AlertDescription className="!pl-0 pt-2">

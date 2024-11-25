@@ -1,5 +1,4 @@
 "use client";
-import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -14,18 +13,13 @@ import {
 import { ImageUpload } from "@/components/ui/image-upload";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItemButton } from "@/components/ui/radio-group";
-import { ToolTipLabel } from "@/components/ui/tooltip";
-import { useDashboardRouter } from "@/lib/DashboardRouter";
-import { accountStatus, useAccount } from "@3rdweb-sdk/react/hooks/useApi";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import invariant from "tiny-invariant";
 import { z } from "zod";
-import { useCreateEcosystem } from "../../hooks/use-create-ecosystem";
+import { createEcosystem } from "../../actions/create-ecosystem";
 
 const formSchema = z.object({
   name: z
@@ -42,16 +36,7 @@ const formSchema = z.object({
   permission: z.union([z.literal("PARTNER_WHITELIST"), z.literal("ANYONE")]),
 });
 
-export function CreateEcosystemForm(props: {
-  ecosystemLayoutPath: string;
-}) {
-  // When set, the confirmation modal is open the this contains the form data to be submitted
-  const [formDataToBeConfirmed, setFormDataToBeConfirmed] = useState<
-    z.infer<typeof formSchema> | undefined
-  >();
-  const { data: billingAccountInfo } = useAccount();
-
-  const router = useDashboardRouter();
+export function CreateEcosystemForm(props: { teamSlug: string }) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -59,25 +44,39 @@ export function CreateEcosystemForm(props: {
     },
   });
 
-  const { mutateAsync: createEcosystem, isPending } = useCreateEcosystem({
-    onError: (error) => {
-      const message =
-        error instanceof Error ? error.message : "Failed to create ecosystem";
-      toast.error(message);
-    },
-    onSuccess: (slug: string) => {
-      form.reset();
-      router.push(`${props.ecosystemLayoutPath}/${slug}`);
-    },
-  });
-
   return (
     <>
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit((values) =>
-            setFormDataToBeConfirmed(values),
-          )}
+          onSubmit={form.handleSubmit(async (values) => {
+            const res = await createEcosystem({
+              teamSlug: props.teamSlug,
+              ...values,
+            });
+            switch (res.status) {
+              case 401: {
+                toast.error("Please login to create an ecosystem");
+                break;
+              }
+              case 403:
+                {
+                  toast.error(
+                    "You are not authorized to create an ecosystem, please ask your team owner to create it.",
+                  );
+                }
+                break;
+              case 409: {
+                toast.error("An ecosystem with that name already exists.");
+                break;
+              }
+              // any other status code treat as a random failure
+              default: {
+                toast.error(
+                  "Failed to create ecosystem, please try again later.",
+                );
+              }
+            }
+          })}
           className="flex flex-col items-stretch gap-8"
         >
           <div className="grid gap-6">
@@ -164,49 +163,20 @@ export function CreateEcosystemForm(props: {
               )}
             />
           </div>
-          {billingAccountInfo?.status !== accountStatus.validPayment ? (
-            <ToolTipLabel label="Please update your payment method to create an ecosystem">
-              {/* Allows the button to be disabled but the tooltip still works */}
-              <div className="w-full">
-                <Button
-                  type="submit"
-                  disabled={true}
-                  variant="primary"
-                  className="w-full opacity-50"
-                >
-                  Create
-                </Button>
-              </div>
-            </ToolTipLabel>
-          ) : (
-            <Button
-              type="submit"
-              variant="primary"
-              className="w-full"
-              disabled={isPending}
-            >
-              {isPending && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
-              Create
-            </Button>
-          )}
+
+          <Button
+            type="submit"
+            variant="primary"
+            className="w-full"
+            disabled={form.formState.isSubmitting}
+          >
+            {form.formState.isSubmitting && (
+              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+            )}
+            Create
+          </Button>
         </form>
       </Form>
-      <ConfirmationDialog
-        open={formDataToBeConfirmed !== undefined}
-        onOpenChange={(open) =>
-          !open ? setFormDataToBeConfirmed(undefined) : null
-        }
-        title={`Are you sure you want to create ecosystem ${form.getValues().name}?`}
-        description="Your account will be charged $250 per month."
-        onSubmit={() => {
-          invariant(formDataToBeConfirmed, "Form data not found");
-          createEcosystem({
-            name: formDataToBeConfirmed.name,
-            logo: formDataToBeConfirmed.logo,
-            permission: formDataToBeConfirmed.permission,
-          });
-        }}
-      />
     </>
   );
 }
