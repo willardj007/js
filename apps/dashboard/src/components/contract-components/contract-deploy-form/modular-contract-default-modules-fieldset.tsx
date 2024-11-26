@@ -6,6 +6,7 @@ import { FormErrorMessage, FormLabel } from "tw-components";
 import type { CustomContractDeploymentForm } from "./custom-contract";
 import { PrimarySaleFieldset } from "./primary-sale-fieldset";
 import { RoyaltyFieldset } from "./royalty-fieldset";
+import { SequentialTokenIdFieldset } from "./sequential-token-id-fieldset";
 
 export function getModuleInstallParams(mod: FetchDeployMetadataResult) {
   return (
@@ -65,6 +66,16 @@ function RenderModule(props: {
     if (showPrimarySaleFiedset(paramNames)) {
       return (
         <RenderPrimarySaleFieldset module={module} form={form} isTWPublisher />
+      );
+    }
+
+    if (showSequentialTokenIdFieldset(paramNames)) {
+      return (
+        <RenderSequentialTokenIdFieldset
+          module={module}
+          form={form}
+          isTWPublisher
+        />
       );
     }
   }
@@ -128,6 +139,26 @@ function RenderPrimarySaleFieldset(prosp: {
       errorMessage={
         form.getFieldState(primarySaleRecipientPath, form.formState).error
           ?.message
+      }
+    />
+  );
+}
+
+function RenderSequentialTokenIdFieldset(prosp: {
+  module: FetchDeployMetadataResult;
+  form: CustomContractDeploymentForm;
+  isTWPublisher: boolean;
+}) {
+  const { module, form } = prosp;
+
+  const startTokenIdPath = `moduleData.${module.name}.startTokenId` as const;
+
+  return (
+    <SequentialTokenIdFieldset
+      isInvalid={!!form.getFieldState(startTokenIdPath, form.formState).error}
+      register={form.register(startTokenIdPath)}
+      errorMessage={
+        form.getFieldState(startTokenIdPath, form.formState).error?.message
       }
     />
   );
@@ -197,4 +228,8 @@ export function showPrimarySaleFiedset(paramNames: string[]) {
 
 export function showSuperchainBridgeFieldset(paramNames: string[]) {
   return paramNames.length === 1 && paramNames.includes("superchainBridge");
+}
+
+function showSequentialTokenIdFieldset(paramNames: string[]) {
+  return paramNames.length === 1 && paramNames.includes("startTokenId");
 }
