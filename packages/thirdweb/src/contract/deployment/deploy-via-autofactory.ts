@@ -6,7 +6,6 @@ import { getRpcClient } from "../../rpc/rpc.js";
 import { encode } from "../../transaction/actions/encode.js";
 import { sendAndConfirmTransaction } from "../../transaction/actions/send-and-confirm-transaction.js";
 import type { PreparedTransaction } from "../../transaction/prepare-transaction.js";
-import { keccakId } from "../../utils/any-evm/keccak-id.js";
 import { isZkSyncChain } from "../../utils/any-evm/zksync/isZkSyncChain.js";
 import { toHex } from "../../utils/encoding/hex.js";
 import { resolvePromisedValue } from "../../utils/promise/resolve-promised-value.js";
@@ -35,7 +34,8 @@ export function prepareAutoFactoryDeployTransaction(
       });
       const blockNumber = await eth_blockNumber(rpcRequest);
       const salt = args.salt
-        ? keccakId(args.salt)
+        ? //? keccakId(args.salt)
+          (args.salt as `0x${string}`)
         : toHex(blockNumber, {
             size: 32,
           });

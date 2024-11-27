@@ -163,7 +163,7 @@ export async function deployContractfromDeployMetadata(
         import("../../contract/deployment/deploy-via-autofactory.js"),
         import("../../contract/deployment/utils/bootstrap.js"),
       ]);
-      const { cloneFactoryContract, implementationContract } =
+      const { cloneFactoryContract: _, implementationContract } =
         await getOrDeployInfraForPublishedContract({
           chain,
           client,
@@ -181,18 +181,26 @@ export async function deployContractfromDeployMetadata(
       const initializeTransaction = await getInitializeTransaction({
         client,
         chain,
-        deployMetadata: deployMetadata,
+        deployMetadata,
         implementationContract,
         initializeParams,
         account,
         modules,
       });
 
+      // TODO: remove this once the modified version of TWCloneFactory
+      // has been published under the thirdweb wallet
+      const modifiedCloneFactoryContract = getContract({
+        client,
+        address: "0x7756D8a084e55d9872BD5bBDf6867543D15866A4", // only deployed on OP and zora testnets
+        chain,
+      });
+
       return deployViaAutoFactory({
         client,
         chain,
         account,
-        cloneFactoryContract,
+        cloneFactoryContract: modifiedCloneFactoryContract,
         initializeTransaction,
         salt,
       });

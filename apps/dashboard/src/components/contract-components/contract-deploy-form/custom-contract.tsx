@@ -35,6 +35,7 @@ import {
 } from "thirdweb/deploys";
 import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
 import { upload } from "thirdweb/storage";
+import { concatHex, padHex } from "thirdweb/utils";
 import { FormHelperText, FormLabel, Heading, Text } from "tw-components";
 import { useCustomFactoryAbi, useFunctionParamsFromABI } from "../hooks";
 import { addContractToMultiChainRegistry } from "../utils";
@@ -436,7 +437,7 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
 
       // TODO: discuss how to handle the salt properly for crosschain contracts
       const salt = isSuperchainInterop
-        ? "thirdweb"
+        ? concatHex(["0x0101", padHex("0x", { size: 30 })]).toString()
         : params.deployDeterministic
           ? params.signerAsSalt
             ? activeAccount.address.concat(params.saltForCreate2)

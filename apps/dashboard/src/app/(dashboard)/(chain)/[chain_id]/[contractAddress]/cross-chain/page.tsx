@@ -52,14 +52,6 @@ export default async function Page(props: {
     },
   );
 
-  const _topOPStackChainIds = [
-    8453, // Base
-    10, // OP Mainnet
-    34443, // Mode Network
-    7560, // Cyber
-    7777777, // Zora
-  ];
-
   const topOPStackTestnetChainIds = [
     84532, // Base
     11155420, // OP testnet

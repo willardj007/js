@@ -36,6 +36,7 @@ import { ZERO_ADDRESS, defineChain } from "thirdweb";
 import type { FetchDeployMetadataResult } from "thirdweb/contract";
 import { deployContractfromDeployMetadata } from "thirdweb/deploys";
 import { useActiveAccount, useSwitchActiveWalletChain } from "thirdweb/react";
+import { concatHex, padHex } from "thirdweb/utils";
 
 export type CrossChain = {
   id: number;
@@ -170,7 +171,7 @@ export function DataTable({
 
       const chain = defineChain(chainId);
       const client = getThirdwebClient();
-      const salt = "thirdweb";
+      const salt = concatHex(["0x0101", padHex("0x", { size: 30 })]).toString();
 
       await switchChain(chain);
 
