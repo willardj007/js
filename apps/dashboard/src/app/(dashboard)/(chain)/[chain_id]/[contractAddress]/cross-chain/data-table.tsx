@@ -101,6 +101,11 @@ export function DataTable({
         throw new Error("No active account");
       }
 
+      // TODO: fetch the ContractIntialized event
+      // Guessing it has to fetch the transaction hash based on the contract address
+      // Then fetch the block number from the transaction hash
+      // Then fetch the event by limiting the block number
+
       const coreInitializeParams = {
         ...(
           coreMetadata.abi

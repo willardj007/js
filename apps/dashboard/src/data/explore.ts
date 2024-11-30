@@ -201,7 +201,7 @@ const CROSS_CHAIN = {
   contracts: [
     // erc20 drop
     [
-      "thirdweb.eth/ERC20CoreInitializable",
+      "0x5bb2610C42280674d6f70682f76311B44D1c07FB/ERC20CoreInitializable", // TODO: replace this with the thirdweb published contract
       [
         "deployer.thirdweb.eth/ClaimableERC20",
         "0xf2d22310905EaD92C19c7ef0003C1AD38e129cb1/SuperChainInterop", // TODO: replace this with the OP published contract

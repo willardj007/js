@@ -77,7 +77,10 @@ export default async function Page(props: {
         id: chainId,
         network: chainMetadata.name,
         chainId: chain.id,
-        status: code === _originalCode ? "DEPLOYED" : "NOT_DEPLOYED",
+        status:
+          code === _originalCode
+            ? ("DEPLOYED" as const)
+            : ("NOT_DEPLOYED" as const),
       };
     }),
   );
@@ -129,7 +132,6 @@ export default async function Page(props: {
       coreMetadata={coreMetadata}
       modulesMetadata={modulesMetadata}
       erc20InitialData={erc20InitialData}
-      contract={contract}
       data={chainsDeployedOn}
     />
   );

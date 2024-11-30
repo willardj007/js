@@ -1,3 +1,4 @@
+import { keccakId } from "src/exports/utils.js";
 import { parseEventLogs } from "../../event/actions/parse-logs.js";
 import { proxyDeployedEvent } from "../../extensions/thirdweb/__generated__/IContractFactory/events/ProxyDeployed.js";
 import { deployProxyByImplementation } from "../../extensions/thirdweb/__generated__/IContractFactory/write/deployProxyByImplementation.js";
@@ -34,8 +35,9 @@ export function prepareAutoFactoryDeployTransaction(
       });
       const blockNumber = await eth_blockNumber(rpcRequest);
       const salt = args.salt
-        ? //? keccakId(args.salt)
-          (args.salt as `0x${string}`)
+        ? args.salt.startsWith("0x") && args.salt.length === 66
+          ? (args.salt as `0x${string}`)
+          : keccakId(args.salt)
         : toHex(blockNumber, {
             size: 32,
           });
