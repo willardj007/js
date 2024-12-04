@@ -192,7 +192,7 @@ export async function deployContractfromDeployMetadata(
       // has been published under the thirdweb wallet
       const modifiedCloneFactoryContract = getContract({
         client,
-        address: "0x7756D8a084e55d9872BD5bBDf6867543D15866A4", // only deployed on OP and zora testnets
+        address: "0xB83db4b940e4796aA1f53DBFC824B9B1865835D5", // only deployed on OP and zora testnets
         chain,
       });
 

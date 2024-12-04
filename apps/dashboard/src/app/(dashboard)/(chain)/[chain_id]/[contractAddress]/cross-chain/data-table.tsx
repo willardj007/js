@@ -24,15 +24,8 @@ import {
   DeployStatusModal,
   useDeployStatusModal,
 } from "components/contract-components/contract-deploy-form/deploy-context-modal";
-import {
-  getModuleInstallParams,
-  showPrimarySaleFiedset,
-  showRoyaltyFieldset,
-  showSuperchainBridgeFieldset,
-} from "components/contract-components/contract-deploy-form/modular-contract-default-modules-fieldset";
 import { useTxNotifications } from "hooks/useTxNotifications";
-import { replaceTemplateValues } from "lib/deployment/template-values";
-import { ZERO_ADDRESS, defineChain } from "thirdweb";
+import { defineChain } from "thirdweb";
 import type { FetchDeployMetadataResult } from "thirdweb/contract";
 import { deployContractfromDeployMetadata } from "thirdweb/deploys";
 import { useActiveAccount, useSwitchActiveWalletChain } from "thirdweb/react";
@@ -49,12 +42,12 @@ export function DataTable({
   data,
   coreMetadata,
   modulesMetadata,
-  erc20InitialData: [_name, _symbol, _contractURI, _owner],
+  initializerCalldata,
 }: {
   data: CrossChain[];
   coreMetadata: FetchDeployMetadataResult;
   modulesMetadata: FetchDeployMetadataResult[];
-  erc20InitialData: string[];
+  initializerCalldata: `0x${string}`;
 }) {
   const activeAccount = useActiveAccount();
   const switchChain = useSwitchActiveWalletChain();
@@ -101,78 +94,7 @@ export function DataTable({
         throw new Error("No active account");
       }
 
-      // TODO: fetch the ContractIntialized event
-      // Guessing it has to fetch the transaction hash based on the contract address
-      // Then fetch the block number from the transaction hash
-      // Then fetch the event by limiting the block number
-
-      const coreInitializeParams = {
-        ...(
-          coreMetadata.abi
-            .filter((a) => a.type === "function")
-            .find((a) => a.name === "initialize")?.inputs || []
-        ).reduce(
-          (acc, param) => {
-            if (!param.name) {
-              param.name = "*";
-            }
-
-            acc[param.name] = replaceTemplateValues(
-              coreMetadata?.constructorParams?.[param.name]?.defaultValue
-                ? coreMetadata?.constructorParams?.[param.name]?.defaultValue ||
-                    ""
-                : param.name === "_royaltyBps" ||
-                    param.name === "_platformFeeBps"
-                  ? "0"
-                  : "",
-              param.type,
-              {
-                connectedWallet: "0x0000000000000000000000000000000000000000",
-                chainId: 1,
-              },
-            );
-
-            return acc;
-          },
-          {} as Record<string, string>,
-        ),
-        _name,
-        _symbol,
-        _contractURI,
-        _owner,
-      };
-
-      const moduleInitializeParams = modulesMetadata.reduce(
-        (acc, mod) => {
-          const params = getModuleInstallParams(mod);
-          const paramNames = params
-            .map((param) => param.name)
-            .filter((p) => p !== undefined);
-          const returnVal: Record<string, string> = {};
-
-          // set connected wallet address as default "royaltyRecipient"
-          if (showRoyaltyFieldset(paramNames)) {
-            returnVal.royaltyRecipient = _owner || "";
-            returnVal.royaltyBps = "0";
-            returnVal.transferValidator = ZERO_ADDRESS;
-          }
-
-          // set connected wallet address as default "primarySaleRecipient"
-          else if (showPrimarySaleFiedset(paramNames)) {
-            returnVal.primarySaleRecipient = _owner || "";
-          }
-
-          // set superchain bridge address
-          else if (showSuperchainBridgeFieldset(paramNames)) {
-            returnVal.superchainBridge =
-              "0x4200000000000000000000000000000000000010"; // OP Superchain Bridge
-          }
-
-          acc[mod.name] = returnVal;
-          return acc;
-        },
-        {} as Record<string, Record<string, string>>,
-      );
+      // TODO: deploy the core contract directly with the initializer calldata
 
       const chain = defineChain(chainId);
       const client = getThirdwebClient();

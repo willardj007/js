@@ -1,6 +1,7 @@
 import { fetchPublishedContractsFromDeploy } from "components/contract-components/fetchPublishedContractsFromDeploy";
 import { notFound, redirect } from "next/navigation";
 import { readContract } from "thirdweb";
+import { getContractEvents, prepareEvent } from "thirdweb";
 import { defineChain, getChainMetadata, localhost } from "thirdweb/chains";
 import { type FetchDeployMetadataResult, getContract } from "thirdweb/contract";
 import { getInstalledModules } from "thirdweb/modules";
@@ -42,7 +43,7 @@ export default async function Page(props: {
     redirect(`/${params.chain_id}/${params.contractAddress}`);
   }
 
-  const _originalCode = await eth_getCode(
+  const originalCode = await eth_getCode(
     getRpcClient({
       client: contract.client,
       chain: contract.chain,
@@ -78,7 +79,7 @@ export default async function Page(props: {
         network: chainMetadata.name,
         chainId: chain.id,
         status:
-          code === _originalCode
+          code === originalCode
             ? ("DEPLOYED" as const)
             : ("NOT_DEPLOYED" as const),
       };
@@ -108,7 +109,7 @@ export default async function Page(props: {
     ),
   )) as FetchDeployMetadataResult[];
 
-  const erc20InitialData = await Promise.all([
+  const _erc20InitialData = await Promise.all([
     readContract({
       contract: contract,
       method: "function name() view returns (string)",
@@ -127,11 +128,23 @@ export default async function Page(props: {
     }),
   ]);
 
+  const ProxyDeployedEvent = prepareEvent({
+    signature:
+      "event ProxyDeployed(address indexed implementation, address proxy, address indexed deployer, bytes data)",
+  });
+
+  // TODO: figure out how to fetch the events properly
+  const [event] = await getContractEvents({
+    contract,
+    events: [ProxyDeployedEvent],
+    blockRange: 123456n,
+  });
+
   return (
     <DataTable
       coreMetadata={coreMetadata}
       modulesMetadata={modulesMetadata}
-      erc20InitialData={erc20InitialData}
+      initializerCalldata={event?.args.data}
       data={chainsDeployedOn}
     />
   );
