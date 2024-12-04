@@ -1,5 +1,98 @@
 # thirdweb
 
+## 5.73.0
+
+### Minor Changes
+
+- [#5457](https://github.com/thirdweb-dev/js/pull/5457) [`57fa96b`](https://github.com/thirdweb-dev/js/commit/57fa96b268671f19c7f57fa2208fb83e2b0e75b5) Thanks [@kien-ngo](https://github.com/kien-ngo)! - Add 2 new Pay functions: convertFiatToCrypto and convertCryptoToFiat
+
+  Examples:
+
+  ### Convert fiat (USD) to crypto
+
+  ```ts
+  import { convertFiatToCrypto } from "thirdweb/pay";
+  import { ethereum } from "thirdweb/chains";
+
+  // Convert 2 cents to ETH
+  const result = await convertFiatToCrypto({
+    from: "USD",
+    // the token address. For native token, use NATIVE_TOKEN_ADDRESS
+    to: "0x...",
+    // the chain (of the chain where the token belong to)
+    chain: ethereum,
+    // 2 cents
+    fromAmount: 0.02,
+  });
+  // Result: 0.0000057 (a number)
+  ```
+
+  ### Convert crypto to fiat (USD)
+
+  ```ts
+  import { convertCryptoToFiat } from "thirdweb/pay";
+
+  // Get Ethereum price
+  const result = convertCryptoToFiat({
+    fromTokenAddress: NATIVE_TOKEN_ADDRESS,
+    to: "USD",
+    chain: ethereum,
+    fromAmount: 1,
+  });
+
+  // Result: 3404.11 (number)
+  ```
+
+### Patch Changes
+
+- [#5594](https://github.com/thirdweb-dev/js/pull/5594) [`b7c8854`](https://github.com/thirdweb-dev/js/commit/b7c885432726eeaf3401217573f2cff0f5247ff7) Thanks [@joaquim-verges](https://github.com/joaquim-verges)! - Support for Expo 52 and React Native 0.76
+
+- [#5595](https://github.com/thirdweb-dev/js/pull/5595) [`9b45aae`](https://github.com/thirdweb-dev/js/commit/9b45aae699c6f927816a415cabd61bb30bef72b1) Thanks [@ElasticBottle](https://github.com/ElasticBottle)! - Display error message when failing to fetch account status from endpoint outside of unauthorized requests
+
+- [#5592](https://github.com/thirdweb-dev/js/pull/5592) [`c3d7b66`](https://github.com/thirdweb-dev/js/commit/c3d7b662c402f96696141070ea42b2e10d94e1f8) Thanks [@gregfromstl](https://github.com/gregfromstl)! - Properly updates active smart wallet when switching signer account on EOA wallet
+
+- [#5577](https://github.com/thirdweb-dev/js/pull/5577) [`b117cb1`](https://github.com/thirdweb-dev/js/commit/b117cb19279a7807fc956e77ae144788112eec7f) Thanks [@joaquim-verges](https://github.com/joaquim-verges)! - Show warning when sponsorship policy rejects a transaction
+
+- [#5531](https://github.com/thirdweb-dev/js/pull/5531) [`1e9a6c7`](https://github.com/thirdweb-dev/js/commit/1e9a6c7d8ae28012956b688f6e0af6f94c075181) Thanks [@joaquim-verges](https://github.com/joaquim-verges)! - Handle 0 value for maxPriorityFeePerGas in 712 transactions
+
+## 5.72.0
+
+### Minor Changes
+
+- [#5495](https://github.com/thirdweb-dev/js/pull/5495) [`d1845f3`](https://github.com/thirdweb-dev/js/commit/d1845f3d6096d81e24bdb3cff38d19efd652ada1) Thanks [@kien-ngo](https://github.com/kien-ngo)! - Add headless components: ChainProvider, ChainIcon & ChainName
+
+- [#5529](https://github.com/thirdweb-dev/js/pull/5529) [`7488102`](https://github.com/thirdweb-dev/js/commit/7488102d20604a1d8cfd4653a34aa9a975f5c7f1) Thanks [@gregfromstl](https://github.com/gregfromstl)! - Adds LoyaltyCard extensions and support for ERC721 deployment.
+
+  ```ts
+  import { deployERC721Contract } from "thirdweb/deploys";
+
+  const loyaltyCardContractAddress = await deployERC721Contract({
+    chain: "your-chain-id", // replace with your chain ID
+    client: yourThirdwebClient, // replace with your Thirdweb client instance
+    account: yourAccount, // replace with your account details
+    type: "LoyaltyCard",
+    params: {
+      name: "MyLoyaltyCard",
+      symbol: "LOYAL",
+      description: "A loyalty card NFT contract",
+      image: "path/to/image.png", // replace with your image path
+      defaultAdmin: "0xYourAdminAddress", // replace with your admin address
+      royaltyRecipient: "0xYourRoyaltyRecipient", // replace with your royalty recipient address
+      royaltyBps: 500n, // 5% royalty
+      trustedForwarders: ["0xTrustedForwarderAddress"], // replace with your trusted forwarder addresses
+      saleRecipient: "0xYourSaleRecipient", // replace with your sale recipient address
+      platformFeeBps: 200n, // 2% platform fee
+      platformFeeRecipient: "0xYourPlatformFeeRecipient", // replace with your platform fee recipient address
+    },
+  });
+  ```
+
+### Patch Changes
+
+- [#5517](https://github.com/thirdweb-dev/js/pull/5517) [`480fb4e`](https://github.com/thirdweb-dev/js/commit/480fb4e8ec02b79fdb8b00d709994c50ef929a28) Thanks [@kien-ngo](https://github.com/kien-ngo)! - Fix UI issue when assetTabs is set to an empty array
+
+- [#5548](https://github.com/thirdweb-dev/js/pull/5548) [`9337925`](https://github.com/thirdweb-dev/js/commit/93379251b79375784c1aac292dcaa209a1580b5e) Thanks [@joaquim-verges](https://github.com/joaquim-verges)! - Fix tx cost estimation for pay transaction modal
+
 ## 5.71.0
 
 ### Minor Changes

@@ -27,9 +27,6 @@ export enum PageId {
   // thirdweb.com/contract-extensions
   // ContractExtensionsLanding = "contract-extensions-landing",
 
-  // thirdweb.com/web3-sdk
-  Web3SDKLanding = "web3-sdk-landing",
-
   // thirdweb.com/account-abstraction
   SmartWalletLanding = "smart-wallet-landing",
 
@@ -39,17 +36,8 @@ export enum PageId {
   // thirdweb.com/connec
   ConnectLanding = "connect-landing",
 
-  // thirdweb.com/interact
-  InteractLanding = "interact-landing",
-
   // thirdweb.com/auth
   AuthLanding = "auth-landing",
-
-  // thirdweb.com/rpc-edge
-  RPCEdgeLanding = "rpc-edge-landing",
-
-  // thirdweb.com/cointracts
-  ContractsLanding = "contracts-landing",
 
   // thirdweb.com/grant/superchain
   GrantSuperChain = "grant-superchain",
@@ -57,9 +45,6 @@ export enum PageId {
   // ---------------------------------------------------------------------------
   //  general product pages
   // ---------------------------------------------------------------------------
-
-  // thirdweb.com/events
-  Events = "events",
 
   // thirdweb..com/mission
   Mission = "mission",

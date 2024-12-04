@@ -1,12 +1,19 @@
-import { ChakraProviderSetup } from "@/components/ChakraProviderSetup";
+"use client";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { CustomConnectWallet } from "@3rdweb-sdk/react/components/connect-wallet";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { Toaster, toast } from "sonner";
 import { BadgeContainer, mobileViewport } from "stories/utils";
 import { ThirdwebProvider } from "thirdweb/react";
-import { CustomConnectWallet } from "../../../../../../../@3rdweb-sdk/react/components/connect-wallet";
 import {
   type MintFormValues,
   MintableModuleUI,
@@ -42,7 +49,7 @@ const testAddress1 = "0x1F846F6DAE38E1C88D71EAA191760B15f38B7A37";
 
 function Component() {
   const [isOwner, setIsOwner] = useState(true);
-  const [isErc721, setIsErc721] = useState(false);
+  const [name, setName] = useState("MintableERC721");
   const [isBatchMetadataInstalled, setIsBatchMetadataInstalled] =
     useState(false);
   async function updatePrimaryRecipientStub(values: UpdateFormValues) {
@@ -72,100 +79,100 @@ function Component() {
     version: "1.0.0",
   };
 
-  // TODO - remove ChakraProviderSetup after converting the TransactionButton to tailwind+shadcn
-
   return (
-    <ChakraProviderSetup>
-      <ThirdwebProvider>
-        <div className="container flex max-w-[1150px] flex-col gap-10 py-10">
-          <div>
-            <CustomConnectWallet loginRequired={false} />
-          </div>
-
-          <div className="flex flex-wrap items-center gap-5">
-            <CheckboxWithLabel
-              value={isOwner}
-              onChange={setIsOwner}
-              id="isOwner"
-              label="Is Owner"
-            />
-
-            <CheckboxWithLabel
-              value={isErc721}
-              onChange={setIsErc721}
-              id="isErc721"
-              label="isErc721"
-            />
-
-            <CheckboxWithLabel
-              value={isBatchMetadataInstalled}
-              onChange={setIsBatchMetadataInstalled}
-              id="isBatchMetadataInstalled"
-              label="isBatchMetadataInstalled"
-            />
-          </div>
-
-          <BadgeContainer label="Empty Primary Sale Recipient">
-            <MintableModuleUI
-              contractInfo={contractInfo}
-              moduleAddress="0x0000000000000000000000000000000000000000"
-              isPending={false}
-              primarySaleRecipient={""}
-              updatePrimaryRecipient={updatePrimaryRecipientStub}
-              mint={mintStub}
-              uninstallButton={{
-                onClick: async () => removeMutation.mutateAsync(),
-                isPending: removeMutation.isPending,
-              }}
-              isOwnerAccount={isOwner}
-              isErc721={isErc721}
-              isBatchMetadataInstalled={isBatchMetadataInstalled}
-              contractChainId={1}
-            />
-          </BadgeContainer>
-
-          <BadgeContainer label="Filled Primary Sale Recipient">
-            <MintableModuleUI
-              contractInfo={contractInfo}
-              moduleAddress="0x0000000000000000000000000000000000000000"
-              isPending={false}
-              primarySaleRecipient={testAddress1}
-              updatePrimaryRecipient={updatePrimaryRecipientStub}
-              mint={mintStub}
-              uninstallButton={{
-                onClick: () => removeMutation.mutateAsync(),
-                isPending: removeMutation.isPending,
-              }}
-              isOwnerAccount={isOwner}
-              isErc721={isErc721}
-              isBatchMetadataInstalled={isBatchMetadataInstalled}
-              contractChainId={1}
-            />
-          </BadgeContainer>
-
-          <BadgeContainer label="Pending">
-            <MintableModuleUI
-              contractInfo={contractInfo}
-              moduleAddress="0x0000000000000000000000000000000000000000"
-              isPending={true}
-              primarySaleRecipient={testAddress1}
-              updatePrimaryRecipient={updatePrimaryRecipientStub}
-              mint={mintStub}
-              uninstallButton={{
-                onClick: () => removeMutation.mutateAsync(),
-                isPending: removeMutation.isPending,
-              }}
-              isOwnerAccount={isOwner}
-              isErc721={isErc721}
-              isBatchMetadataInstalled={isBatchMetadataInstalled}
-              contractChainId={1}
-            />
-          </BadgeContainer>
-
-          <Toaster richColors />
+    <ThirdwebProvider>
+      <div className="container flex max-w-[1150px] flex-col gap-10 py-10">
+        <div>
+          <CustomConnectWallet loginRequired={false} />
         </div>
-      </ThirdwebProvider>
-    </ChakraProviderSetup>
+
+        <div className="flex flex-wrap items-center gap-5">
+          <CheckboxWithLabel
+            value={isOwner}
+            onChange={setIsOwner}
+            id="isOwner"
+            label="Is Owner"
+          />
+
+          <CheckboxWithLabel
+            value={isBatchMetadataInstalled}
+            onChange={setIsBatchMetadataInstalled}
+            id="isBatchMetadataInstalled"
+            label="isBatchMetadataInstalled"
+          />
+
+          <Select value={name} onValueChange={(v) => setName(v)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="MintableERC721">MintableERC721</SelectItem>
+              <SelectItem value="MintableERC1155">MintableERC1155</SelectItem>
+              <SelectItem value="MintableERC20">MintableERC20</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <BadgeContainer label="Empty Primary Sale Recipient">
+          <MintableModuleUI
+            contractInfo={contractInfo}
+            moduleAddress="0x0000000000000000000000000000000000000000"
+            isPending={false}
+            primarySaleRecipient={""}
+            updatePrimaryRecipient={updatePrimaryRecipientStub}
+            mint={mintStub}
+            uninstallButton={{
+              onClick: async () => removeMutation.mutateAsync(),
+              isPending: removeMutation.isPending,
+            }}
+            isOwnerAccount={isOwner}
+            name={name}
+            isBatchMetadataInstalled={isBatchMetadataInstalled}
+            contractChainId={1}
+          />
+        </BadgeContainer>
+
+        <BadgeContainer label="Filled Primary Sale Recipient">
+          <MintableModuleUI
+            contractInfo={contractInfo}
+            moduleAddress="0x0000000000000000000000000000000000000000"
+            isPending={false}
+            primarySaleRecipient={testAddress1}
+            updatePrimaryRecipient={updatePrimaryRecipientStub}
+            mint={mintStub}
+            uninstallButton={{
+              onClick: () => removeMutation.mutateAsync(),
+              isPending: removeMutation.isPending,
+            }}
+            isOwnerAccount={isOwner}
+            name={name}
+            isBatchMetadataInstalled={isBatchMetadataInstalled}
+            contractChainId={1}
+          />
+        </BadgeContainer>
+
+        <BadgeContainer label="Pending">
+          <MintableModuleUI
+            contractInfo={contractInfo}
+            moduleAddress="0x0000000000000000000000000000000000000000"
+            isPending={true}
+            primarySaleRecipient={testAddress1}
+            updatePrimaryRecipient={updatePrimaryRecipientStub}
+            mint={mintStub}
+            uninstallButton={{
+              onClick: () => removeMutation.mutateAsync(),
+              isPending: removeMutation.isPending,
+            }}
+            isOwnerAccount={isOwner}
+            name={name}
+            isBatchMetadataInstalled={isBatchMetadataInstalled}
+            contractChainId={1}
+          />
+        </BadgeContainer>
+
+        <Toaster richColors />
+      </div>
+    </ThirdwebProvider>
   );
 }
 
