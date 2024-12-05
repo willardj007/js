@@ -1,4 +1,3 @@
-import { keccakId } from "src/exports/utils.js";
 import { parseEventLogs } from "../../event/actions/parse-logs.js";
 import { proxyDeployedEvent } from "../../extensions/thirdweb/__generated__/IContractFactory/events/ProxyDeployed.js";
 import { deployProxyByImplementation } from "../../extensions/thirdweb/__generated__/IContractFactory/write/deployProxyByImplementation.js";
@@ -7,6 +6,7 @@ import { getRpcClient } from "../../rpc/rpc.js";
 import { encode } from "../../transaction/actions/encode.js";
 import { sendAndConfirmTransaction } from "../../transaction/actions/send-and-confirm-transaction.js";
 import type { PreparedTransaction } from "../../transaction/prepare-transaction.js";
+import { keccakId } from "../../utils/any-evm/keccak-id.js";
 import { isZkSyncChain } from "../../utils/any-evm/zksync/isZkSyncChain.js";
 import { toHex } from "../../utils/encoding/hex.js";
 import { resolvePromisedValue } from "../../utils/promise/resolve-promised-value.js";

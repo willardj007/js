@@ -196,7 +196,7 @@ export async function deployContractfromDeployMetadata(
         chain,
       });
 
-      return deployViaAutoFactory({
+      return await deployViaAutoFactory({
         client,
         chain,
         account,

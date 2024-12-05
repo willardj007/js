@@ -203,8 +203,8 @@ const CROSS_CHAIN = {
     [
       "deployer.thirdweb.eth/ERC20CoreInitializable", // TODO: replace this with the thirdweb published contract
       [
-        "deployer.thirdweb.eth/ClaimableERC20",
         "0xf2d22310905EaD92C19c7ef0003C1AD38e129cb1/SuperChainInterop", // TODO: replace this with the OP published contract
+        "deployer.thirdweb.eth/ClaimableERC20",
       ],
       {
         title: "Modular Token Drop",

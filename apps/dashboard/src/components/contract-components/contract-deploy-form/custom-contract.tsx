@@ -26,27 +26,16 @@ import { CircleAlertIcon, ExternalLinkIcon, InfoIcon } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useMemo } from "react";
 import { FormProvider, type UseFormReturn, useForm } from "react-hook-form";
-import {
-  ZERO_ADDRESS,
-  getContract,
-  sendTransaction,
-  waitForReceipt,
-} from "thirdweb";
+import { ZERO_ADDRESS, getContract } from "thirdweb";
 import type { FetchDeployMetadataResult } from "thirdweb/contract";
 import {
   deployContractfromDeployMetadata,
   deployMarketplaceContract,
   getRequiredTransactions,
 } from "thirdweb/deploys";
-import { installPublishedModule } from "thirdweb/modules";
 import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
 import { upload } from "thirdweb/storage";
-import {
-  type AbiFunction,
-  concatHex,
-  encodeAbiParameters,
-  padHex,
-} from "thirdweb/utils";
+import { concatHex, padHex } from "thirdweb/utils";
 import { FormHelperText, FormLabel, Heading, Text } from "tw-components";
 import { useCustomFactoryAbi, useFunctionParamsFromABI } from "../hooks";
 import { addContractToMultiChainRegistry } from "../utils";
@@ -461,7 +450,7 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
       }));
       console.log("module deploy data", moduleDeployData);
 
-      const deployData = {
+      const coreContractAddress = await deployContractfromDeployMetadata({
         account: activeAccount,
         chain: walletChain,
         client: thirdwebClient,
@@ -472,11 +461,7 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
           ? // remove modules for superchain interop in order to deploy deterministically deploy just the core contract
             []
           : moduleDeployData,
-      };
-
-      console.log("deploy data", deployData);
-      const coreContractAddress =
-        await deployContractfromDeployMetadata(deployData);
+      });
       const coreContract = getContract({
         client: thirdwebClient,
         address: coreContractAddress,
@@ -484,49 +469,51 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
       });
       console.log("core contract", coreContract);
 
-      if (isSuperchainInterop && moduleDeployData) {
-        await Promise.all(
-          moduleDeployData.map(async (m) => {
-            let moduleData: `0x${string}` | undefined;
+      //if (isSuperchainInterop && moduleDeployData) {
+      //  await Promise.all(
+      //    moduleDeployData.map(async (m) => {
+      //      let moduleData: `0x${string}` | undefined;
+      //
+      //      const moduleInstallParams = m.deployMetadata.abi.find(
+      //        (abiType) =>
+      //          (abiType as AbiFunction).name === "encodeBytesOnInstall",
+      //      ) as AbiFunction | undefined;
+      //
+      //      if (m.initializeParams && moduleInstallParams) {
+      //        moduleData = encodeAbiParameters(
+      //          (
+      //            moduleInstallParams.inputs as { name: string; type: string }[]
+      //          ).map((p) => ({
+      //            name: p.name,
+      //            type: p.type,
+      //          })),
+      //          Object.values(m.initializeParams),
+      //        );
+      //      }
+      //      console.log("module install params", moduleInstallParams);
+      //
+      //      const installTransaction = installPublishedModule({
+      //        contract: coreContract,
+      //        account: activeAccount,
+      //        moduleName: m.deployMetadata.name,
+      //        publisher: m.deployMetadata.publisher,
+      //        version: m.deployMetadata.version,
+      //        moduleData,
+      //      });
+      //      console.log("install transaction", installTransaction);
+      //
+      //      const txResult = await sendTransaction({
+      //        transaction: installTransaction,
+      //        account: activeAccount,
+      //      });
+      //      console.log("tx result", txResult);
+      //
+      //      return await waitForReceipt(txResult);
+      //    }),
+      //  );
+      //}
 
-            const moduleInstallParams = m.deployMetadata.abi.find(
-              (abiType) =>
-                (abiType as AbiFunction).name === "encodeBytesOnInstall",
-            ) as AbiFunction | undefined;
-
-            if (m.initializeParams && moduleInstallParams) {
-              moduleData = encodeAbiParameters(
-                (
-                  moduleInstallParams.inputs as { name: string; type: string }[]
-                ).map((p) => ({
-                  name: p.name,
-                  type: p.type,
-                })),
-                Object.values(m.initializeParams),
-              );
-            }
-            console.log("module install params", moduleInstallParams);
-
-            const installTransaction = installPublishedModule({
-              contract: coreContract,
-              account: activeAccount,
-              moduleName: m.deployMetadata.name,
-              publisher: m.deployMetadata.publisher,
-              version: m.deployMetadata.version,
-              moduleData,
-            });
-            console.log("install transaction", installTransaction);
-
-            const txResult = await sendTransaction({
-              transaction: installTransaction,
-              account: activeAccount,
-            });
-            console.log("tx result", txResult);
-
-            return await waitForReceipt(txResult);
-          }),
-        );
-      }
+      return coreContractAddress;
     },
   });
 
