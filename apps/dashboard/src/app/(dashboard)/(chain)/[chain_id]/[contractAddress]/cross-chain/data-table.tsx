@@ -53,7 +53,7 @@ import {
   padHex,
 } from "thirdweb/utils";
 
-export type CrossChain = {
+type CrossChain = {
   id: number;
   network: string;
   chainId: number;
@@ -117,8 +117,6 @@ export function DataTable({
       if (!activeAccount) {
         throw new Error("No active account");
       }
-
-      // TODO: deploy the core contract directly with the initializer calldata
 
       const chain = defineChain(chainId);
       const client = getThirdwebClient();
