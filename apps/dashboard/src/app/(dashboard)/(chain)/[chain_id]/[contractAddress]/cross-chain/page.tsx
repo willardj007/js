@@ -107,6 +107,7 @@ export default async function Page(props: {
       ).at(-1),
     ),
   )) as FetchDeployMetadataResult[];
+  console.log("modulesMetadata", modulesMetadata);
 
   const ProxyDeployedEvent = prepareEvent({
     signature:
@@ -133,6 +134,7 @@ export default async function Page(props: {
       modulesMetadata={modulesMetadata}
       initializeData={event?.args.data}
       data={chainsDeployedOn}
+      coreContract={contract}
     />
   );
 }

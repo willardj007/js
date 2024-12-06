@@ -24,12 +24,34 @@ import {
   DeployStatusModal,
   useDeployStatusModal,
 } from "components/contract-components/contract-deploy-form/deploy-context-modal";
+import {
+  getModuleInstallParams,
+  showPrimarySaleFiedset,
+  showRoyaltyFieldset,
+  showSuperchainBridgeFieldset,
+} from "components/contract-components/contract-deploy-form/modular-contract-default-modules-fieldset";
 import { useTxNotifications } from "hooks/useTxNotifications";
-import { defineChain } from "thirdweb";
-import type { FetchDeployMetadataResult } from "thirdweb/contract";
+import {
+  ZERO_ADDRESS,
+  defineChain,
+  getContract,
+  readContract,
+  sendTransaction,
+  waitForReceipt,
+} from "thirdweb";
+import type {
+  FetchDeployMetadataResult,
+  ThirdwebContract,
+} from "thirdweb/contract";
 import { deployContractfromDeployMetadata } from "thirdweb/deploys";
+import { installPublishedModule } from "thirdweb/modules";
 import { useActiveAccount, useSwitchActiveWalletChain } from "thirdweb/react";
-import { concatHex, padHex } from "thirdweb/utils";
+import {
+  type AbiFunction,
+  concatHex,
+  encodeAbiParameters,
+  padHex,
+} from "thirdweb/utils";
 
 export type CrossChain = {
   id: number;
@@ -41,11 +63,13 @@ export type CrossChain = {
 export function DataTable({
   data,
   coreMetadata,
+  coreContract,
   modulesMetadata,
   initializeData,
 }: {
   data: CrossChain[];
   coreMetadata: FetchDeployMetadataResult;
+  coreContract: ThirdwebContract;
   modulesMetadata: FetchDeployMetadataResult[];
   initializeData?: `0x${string}`;
 }) {
@@ -130,6 +154,100 @@ export function DataTable({
         chain,
         client,
       });
+
+      const owner = await readContract({
+        contract: coreContract,
+        method: "function owner() view returns (address)",
+        params: [],
+      });
+      console.log("owner", owner);
+
+      const moduleInitializeParams = modulesMetadata.reduce(
+        (acc, mod) => {
+          const params = getModuleInstallParams(mod);
+          const paramNames = params
+            .map((param) => param.name)
+            .filter((p) => p !== undefined);
+          const returnVal: Record<string, string> = {};
+
+          // set connected wallet address as default "royaltyRecipient"
+          if (showRoyaltyFieldset(paramNames)) {
+            returnVal.royaltyRecipient = owner || "";
+            returnVal.royaltyBps = "0";
+            returnVal.transferValidator = ZERO_ADDRESS;
+          }
+
+          // set connected wallet address as default "primarySaleRecipient"
+          else if (showPrimarySaleFiedset(paramNames)) {
+            returnVal.primarySaleRecipient = owner || "";
+          }
+
+          // set superchain bridge address
+          else if (showSuperchainBridgeFieldset(paramNames)) {
+            returnVal.superchainBridge =
+              "0x4200000000000000000000000000000000000010"; // OP Superchain Bridge
+          }
+
+          acc[mod.name] = returnVal;
+          return acc;
+        },
+        {} as Record<string, Record<string, string>>,
+      );
+      console.log("moduleInitializeParams", moduleInitializeParams);
+
+      const moduleDeployData = modulesMetadata.map((m) => ({
+        deployMetadata: m,
+        initializeParams: moduleInitializeParams[m.name],
+      }));
+      console.log("module deploy data", moduleDeployData);
+
+      const contract = getContract({
+        address: crosschainContractAddress,
+        chain,
+        client,
+      });
+
+      await Promise.all(
+        moduleDeployData.map(async (m) => {
+          let moduleData: `0x${string}` | undefined;
+
+          const moduleInstallParams = m.deployMetadata.abi.find(
+            (abiType) =>
+              (abiType as AbiFunction).name === "encodeBytesOnInstall",
+          ) as AbiFunction | undefined;
+
+          if (m.initializeParams && moduleInstallParams) {
+            moduleData = encodeAbiParameters(
+              (
+                moduleInstallParams.inputs as { name: string; type: string }[]
+              ).map((p) => ({
+                name: p.name,
+                type: p.type,
+              })),
+              Object.values(m.initializeParams),
+            );
+          }
+          console.log("module install params", moduleInstallParams);
+
+          const installTransaction = installPublishedModule({
+            contract,
+            account: activeAccount,
+            moduleName: m.deployMetadata.name,
+            publisher: m.deployMetadata.publisher,
+            version: m.deployMetadata.version,
+            moduleData,
+          });
+          console.log("install transaction", installTransaction);
+
+          const txResult = await sendTransaction({
+            transaction: installTransaction,
+            account: activeAccount,
+          });
+          console.log("tx result", txResult);
+
+          return await waitForReceipt(txResult);
+        }),
+      );
 
       deployStatusModal.nextStep();
       deployStatusModal.setViewContractLink(
