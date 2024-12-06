@@ -42,12 +42,12 @@ export function DataTable({
   data,
   coreMetadata,
   modulesMetadata,
-  initializerCalldata,
+  initializeData,
 }: {
   data: CrossChain[];
   coreMetadata: FetchDeployMetadataResult;
   modulesMetadata: FetchDeployMetadataResult[];
-  initializerCalldata: `0x${string}`;
+  initializeData?: `0x${string}`;
 }) {
   const activeAccount = useActiveAccount();
   const switchChain = useSwitchActiveWalletChain();
@@ -116,14 +116,14 @@ export function DataTable({
         account: activeAccount,
         chain,
         client,
-        deployMetadata: coreMetadata,
-        initializeParams: coreInitializeParams,
+        deployMetadata: {
+          ...coreMetadata,
+          deployType: "crosschain" as const,
+        },
+        initializeData,
         salt,
-        modules: modulesMetadata.map((m) => ({
-          deployMetadata: m,
-          initializeParams: moduleInitializeParams[m.name],
-        })),
       });
+      console.log("crosschain contract address", crosschainContractAddress);
 
       await verifyContract({
         address: crosschainContractAddress,

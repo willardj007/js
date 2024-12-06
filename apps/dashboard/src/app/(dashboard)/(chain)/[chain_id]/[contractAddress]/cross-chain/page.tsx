@@ -1,6 +1,5 @@
 import { fetchPublishedContractsFromDeploy } from "components/contract-components/fetchPublishedContractsFromDeploy";
 import { notFound, redirect } from "next/navigation";
-import { readContract } from "thirdweb";
 import { getContractEvents, prepareEvent } from "thirdweb";
 import { defineChain, getChainMetadata, localhost } from "thirdweb/chains";
 import { type FetchDeployMetadataResult, getContract } from "thirdweb/contract";
@@ -109,42 +108,30 @@ export default async function Page(props: {
     ),
   )) as FetchDeployMetadataResult[];
 
-  const _erc20InitialData = await Promise.all([
-    readContract({
-      contract: contract,
-      method: "function name() view returns (string)",
-    }),
-    readContract({
-      contract: contract,
-      method: "function symbol() view returns (string)",
-    }),
-    readContract({
-      contract: contract,
-      method: "function contractURI() view returns (string)",
-    }),
-    readContract({
-      contract: contract,
-      method: "function owner() view returns (address)",
-    }),
-  ]);
-
   const ProxyDeployedEvent = prepareEvent({
     signature:
       "event ProxyDeployed(address indexed implementation, address proxy, address indexed deployer, bytes data)",
   });
 
+  const twCloneFactoryContract = getContract({
+    address: "0xB83db4b940e4796aA1f53DBFC824B9B1865835D5",
+    chain: contract.chain,
+    client: contract.client,
+  });
+
   // TODO: figure out how to fetch the events properly
-  const [event] = await getContractEvents({
-    contract,
+  const events = await getContractEvents({
+    contract: twCloneFactoryContract,
     events: [ProxyDeployedEvent],
     blockRange: 123456n,
   });
+  const event = events.find((e) => e.args.proxy === params.contractAddress);
 
   return (
     <DataTable
       coreMetadata={coreMetadata}
       modulesMetadata={modulesMetadata}
-      initializerCalldata={event?.args.data}
+      initializeData={event?.args.data}
       data={chainsDeployedOn}
     />
   );

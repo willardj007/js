@@ -47,11 +47,13 @@ export function prepareAutoFactoryDeployTransaction(
       if (!implementation) {
         throw new Error("initializeTransaction must have a 'to' field set");
       }
-      return {
+      const asd = {
         data: await encode(args.initializeTransaction),
         implementation,
         salt,
       } as const;
+      console.error("core contract deploy params: ", asd);
+      return asd;
     },
   });
 }
@@ -93,6 +95,64 @@ export async function deployViaAutoFactory(
     initializeTransaction,
     salt,
   });
+  const receipt = await sendAndConfirmTransaction({
+    transaction: tx,
+    account,
+  });
+  const decodedEvent = parseEventLogs({
+    events: [proxyDeployedEvent()],
+    logs: receipt.logs,
+  });
+  if (decodedEvent.length === 0 || !decodedEvent[0]) {
+    throw new Error(
+      `No ProxyDeployed event found in transaction: ${receipt.transactionHash}`,
+    );
+  }
+  return decodedEvent[0]?.args.proxy;
+}
+
+/**
+ * @internal
+ */
+export async function deployViaAutoFactoryWithImplementationParams(
+  options: ClientAndChainAndAccount & {
+    cloneFactoryContract: ThirdwebContract;
+    initializeData?: `0x${string}`;
+    implementationAddress: string;
+    salt?: string;
+  },
+): Promise<string> {
+  const {
+    client,
+    chain,
+    account,
+    cloneFactoryContract,
+    initializeData,
+    implementationAddress,
+    salt,
+  } = options;
+
+  const rpcRequest = getRpcClient({
+    client,
+    chain,
+  });
+  const blockNumber = await eth_blockNumber(rpcRequest);
+  const parsedSalt = salt
+    ? salt.startsWith("0x") && salt.length === 66
+      ? (salt as `0x${string}`)
+      : keccakId(salt)
+    : toHex(blockNumber, {
+        size: 32,
+      });
+
+  const asd = {
+    contract: cloneFactoryContract,
+    data: initializeData || "0x",
+    implementation: implementationAddress,
+    salt: parsedSalt,
+  };
+  console.error("cross chain contract deploy params: ", asd);
+  const tx = deployProxyByImplementation(asd);
   const receipt = await sendAndConfirmTransaction({
     transaction: tx,
     account,

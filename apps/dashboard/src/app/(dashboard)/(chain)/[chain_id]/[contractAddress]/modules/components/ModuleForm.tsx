@@ -252,7 +252,6 @@ export const InstallModuleForm = (props: InstallModuleFormProps) => {
     module: selectedModuleMeta,
     isQueryEnabled: !!selectedModule && !!isModuleCompatibleQuery.data,
   });
-  console.log("moduleInstallParams", moduleInstallParams.data);
 
   return (
     <FormProvider {...form}>
