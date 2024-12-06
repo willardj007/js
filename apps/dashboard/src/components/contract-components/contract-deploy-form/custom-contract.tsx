@@ -446,7 +446,6 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
         _contractURI,
       };
 
-      // TODO: discuss how to handle the salt properly for crosschain contracts
       const salt = isSuperchainInterop
         ? concatHex(["0x0101", padHex("0x", { size: 30 })]).toString()
         : params.deployDeterministic
@@ -459,7 +458,6 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
         deployMetadata: m,
         initializeParams: params.moduleData[m.name],
       }));
-      console.log("module deploy data", moduleDeployData);
 
       const coreContractAddress = await deployContractfromDeployMetadata({
         account: activeAccount,
@@ -478,7 +476,6 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
         address: coreContractAddress,
         chain: walletChain,
       });
-      console.log("core contract", coreContract);
 
       if (isSuperchainInterop && moduleDeployData) {
         await Promise.allSettled(
@@ -501,7 +498,6 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
                 Object.values(m.initializeParams),
               );
             }
-            console.log("module install params", moduleInstallParams);
 
             const installTransaction = installPublishedModule({
               contract: coreContract,
@@ -511,13 +507,11 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
               version: m.deployMetadata.version,
               moduleData,
             });
-            console.log("install transaction", installTransaction);
 
             const txResult = await sendTransaction({
               transaction: installTransaction,
               account: activeAccount,
             });
-            console.log("tx result", txResult);
 
             return await waitForReceipt(txResult);
           }),

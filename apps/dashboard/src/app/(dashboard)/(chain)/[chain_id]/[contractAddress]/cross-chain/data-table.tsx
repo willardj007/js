@@ -147,7 +147,6 @@ export function DataTable({
         initializeData,
         salt,
       });
-      console.log("crosschain contract address", crosschainContractAddress);
 
       await verifyContract({
         address: crosschainContractAddress,
@@ -160,7 +159,6 @@ export function DataTable({
         method: "function owner() view returns (address)",
         params: [],
       });
-      console.log("owner", owner);
 
       const moduleInitializeParams = modulesMetadata.reduce(
         (acc, mod) => {
@@ -193,13 +191,11 @@ export function DataTable({
         },
         {} as Record<string, Record<string, string>>,
       );
-      console.log("moduleInitializeParams", moduleInitializeParams);
 
       const moduleDeployData = modulesMetadata.map((m) => ({
         deployMetadata: m,
         initializeParams: moduleInitializeParams[m.name],
       }));
-      console.log("module deploy data", moduleDeployData);
 
       const contract = getContract({
         address: crosschainContractAddress,
@@ -227,7 +223,6 @@ export function DataTable({
               Object.values(m.initializeParams),
             );
           }
-          console.log("module install params", moduleInstallParams);
 
           const installTransaction = installPublishedModule({
             contract,
@@ -237,13 +232,11 @@ export function DataTable({
             version: m.deployMetadata.version,
             moduleData,
           });
-          console.log("install transaction", installTransaction);
 
           const txResult = await sendTransaction({
             transaction: installTransaction,
             account: activeAccount,
           });
-          console.log("tx result", txResult);
 
           return await waitForReceipt(txResult);
         }),

@@ -47,13 +47,11 @@ export function prepareAutoFactoryDeployTransaction(
       if (!implementation) {
         throw new Error("initializeTransaction must have a 'to' field set");
       }
-      const asd = {
+      return {
         data: await encode(args.initializeTransaction),
         implementation,
         salt,
       } as const;
-      console.error("core contract deploy params: ", asd);
-      return asd;
     },
   });
 }
@@ -151,7 +149,6 @@ export async function deployViaAutoFactoryWithImplementationParams(
     implementation: implementationAddress,
     salt: parsedSalt,
   };
-  console.error("cross chain contract deploy params: ", asd);
   const tx = deployProxyByImplementation(asd);
   const receipt = await sendAndConfirmTransaction({
     transaction: tx,
