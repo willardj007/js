@@ -118,6 +118,7 @@ export function DataTable({
         throw new Error("No active account");
       }
 
+      // eslint-disable-next-line no-restricted-syntax
       const chain = defineChain(chainId);
       const client = getThirdwebClient();
       const salt = concatHex(["0x0101", padHex("0x", { size: 30 })]).toString();

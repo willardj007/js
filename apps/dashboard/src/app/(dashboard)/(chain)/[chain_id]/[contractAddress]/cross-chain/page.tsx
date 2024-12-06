@@ -62,6 +62,7 @@ export default async function Page(props: {
 
   const chainsDeployedOn = await Promise.all(
     topOPStackTestnetChainIds.map(async (chainId) => {
+      // eslint-disable-next-line no-restricted-syntax
       const chain = defineChain(chainId);
       const chainMetadata = await getChainMetadata(chain);
 
