@@ -466,6 +466,7 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
         deployMetadata: metadata,
         initializeParams,
         salt,
+        isSuperchainInterop,
         modules: isSuperchainInterop
           ? // remove modules for superchain interop in order to deploy deterministically deploy just the core contract
             []

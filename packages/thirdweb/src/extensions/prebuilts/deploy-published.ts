@@ -123,6 +123,8 @@ export type DeployContractfromDeployMetadataOptions = {
   initializeParams?: Record<string, unknown>;
   initializeData?: `0x${string}`;
   implementationConstructorParams?: Record<string, unknown>;
+  isSuperchainInterop?: boolean;
+  isCrosschain?: boolean;
   modules?: {
     deployMetadata: FetchDeployMetadataResult;
     initializeParams?: Record<string, unknown>;
@@ -143,6 +145,8 @@ export async function deployContractfromDeployMetadata(
     initializeParams,
     initializeData,
     deployMetadata,
+    isSuperchainInterop, // TODO: Remove this once the updated Clone Factory has been published
+    isCrosschain,
     implementationConstructorParams,
     modules,
     salt,
@@ -166,7 +170,7 @@ export async function deployContractfromDeployMetadata(
         import("../../contract/deployment/deploy-via-autofactory.js"),
         import("../../contract/deployment/utils/bootstrap.js"),
       ]);
-      const { cloneFactoryContract: _, implementationContract } =
+      const { cloneFactoryContract, implementationContract } =
         await getOrDeployInfraForPublishedContract({
           chain,
           client,
@@ -181,15 +185,9 @@ export async function deployContractfromDeployMetadata(
           publisher: deployMetadata.publisher,
         });
 
-      const initializeTransaction = await getInitializeTransaction({
-        client,
-        chain,
-        deployMetadata,
-        implementationContract,
-        initializeParams,
-        account,
-        modules,
-      });
+      console.error("is superchain interop", isSuperchainInterop);
+      console.error("is crosschain: ", isCrosschain);
+      console.error("initialize data: ", initializeData);
 
       // TODO: remove this once the modified version of TWCloneFactory
       // has been published under the thirdweb wallet
@@ -199,51 +197,37 @@ export async function deployContractfromDeployMetadata(
         chain,
       });
 
-      return await deployViaAutoFactory({
-        client,
-        chain,
-        account,
-        cloneFactoryContract: modifiedCloneFactoryContract,
-        initializeTransaction,
-        salt,
-      });
-    }
-    case "crosschain": {
-      const { getOrDeployInfraForPublishedContract } = await import(
-        "../../contract/deployment/utils/bootstrap.js"
-      );
-      const { cloneFactoryContract: _, implementationContract } =
-        await getOrDeployInfraForPublishedContract({
-          chain,
+      if (isCrosschain) {
+        return await deployViaAutoFactoryWithImplementationParams({
           client,
+          chain,
           account,
-          contractId: deployMetadata.name,
-          constructorParams:
-            implementationConstructorParams ||
-            (await getAllDefaultConstructorParamsForImplementation({
-              chain,
-              client,
-            })),
-          publisher: deployMetadata.publisher,
+          cloneFactoryContract: modifiedCloneFactoryContract,
+          implementationAddress: implementationContract.address,
+          initializeData,
+          salt,
         });
-
-      // TODO: remove this once the modified version of TWCloneFactory
-      // has been published under the thirdweb wallet
-      const modifiedCloneFactoryContract = getContract({
-        client,
-        address: "0xB83db4b940e4796aA1f53DBFC824B9B1865835D5", // only deployed on OP and zora testnets
-        chain,
-      });
-
-      return await deployViaAutoFactoryWithImplementationParams({
-        client,
-        chain,
-        account,
-        cloneFactoryContract: modifiedCloneFactoryContract,
-        implementationAddress: implementationContract.address,
-        initializeData,
-        salt,
-      });
+      } else {
+        const initializeTransaction = await getInitializeTransaction({
+          client,
+          chain,
+          deployMetadata,
+          implementationContract,
+          initializeParams,
+          account,
+          modules,
+        });
+        return await deployViaAutoFactory({
+          client,
+          chain,
+          account,
+          cloneFactoryContract: isSuperchainInterop // TODO: remove this once the updated clone factory is publsihed
+            ? modifiedCloneFactoryContract
+            : cloneFactoryContract,
+          initializeTransaction,
+          salt,
+        });
+      }
     }
     case "customFactory": {
       if (!deployMetadata?.factoryDeploymentData?.customFactoryInput) {
