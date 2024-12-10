@@ -1,5 +1,6 @@
 "use client";
 
+import { redirectToCheckout } from "@/actions/billing";
 import { getRawAccountAction } from "@/actions/getAccount";
 import { ColorModeToggle } from "@/components/color-mode-toggle";
 import { Spinner } from "@/components/ui/Spinner/Spinner";
@@ -122,11 +123,7 @@ function PageContent(props: {
     | {
         id: "complete";
       }
-  >(
-    props.account
-      ? { id: "onboarding", account: props.account }
-      : { id: "login" },
-  );
+  >({ id: "login" });
 
   const router = useDashboardRouter();
   const connectionStatus = useActiveWalletConnectionStatus();
@@ -155,6 +152,7 @@ function PageContent(props: {
           account={screen.account}
           onComplete={onComplete}
           redirectPath={props.nextPath || "/team"}
+          redirectToCheckout={redirectToCheckout}
         />
       </Suspense>
     );
@@ -214,8 +212,8 @@ function CustomConnectEmbed(props: {
       modalSize="wide"
       theme={getSDKTheme(theme === "light" ? "light" : "dark")}
       className="shadow-lg"
-      privacyPolicyUrl="/privacy"
-      termsOfServiceUrl="/tos"
+      privacyPolicyUrl="/privacy-policy"
+      termsOfServiceUrl="/terms"
     />
   );
 }

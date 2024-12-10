@@ -228,8 +228,6 @@ async function redirects() {
       destination: "/explore",
       permanent: false,
     },
-
-    // framer redirects
     {
       source: "/deploy",
       destination: "/contracts/deployment-tool",
@@ -295,6 +293,30 @@ async function redirects() {
     {
       source: "/events",
       destination: "/",
+      permanent: false,
+    },
+    // redirect /community to /community/ambassadors
+    {
+      source: "/community",
+      destination: "/community/ambassadors",
+      permanent: false,
+    },
+    // redirect `/tos` to `/terms`
+    {
+      source: "/tos",
+      destination: "/terms",
+      permanent: false,
+    },
+    // redirect `/privacy` to `/privacy-policy`
+    {
+      source: "/privacy",
+      destination: "/privacy-policy",
+      permanent: false,
+    },
+    // redirect `/mission` to `/home`
+    {
+      source: "/mission",
+      destination: "/home",
       permanent: false,
     },
     ...legacyDashboardToTeamRedirects,
