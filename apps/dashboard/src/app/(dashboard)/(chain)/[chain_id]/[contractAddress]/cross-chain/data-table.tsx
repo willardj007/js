@@ -34,7 +34,9 @@ import { useTxNotifications } from "hooks/useTxNotifications";
 import {
   ZERO_ADDRESS,
   defineChain,
+  eth_getTransactionCount,
   getContract,
+  getRpcClient,
   readContract,
   sendTransaction,
   waitForReceipt,
@@ -205,44 +207,53 @@ export function DataTable({
           client,
         });
 
-        await Promise.all(
-          moduleDeployData.map(async (m) => {
-            let moduleData: `0x${string}` | undefined;
+        const rpcRequest = getRpcClient({
+          client,
+          chain,
+        });
+        const currentNonce = await eth_getTransactionCount(rpcRequest, {
+          address: activeAccount.address,
+        });
 
-            const moduleInstallParams = m.deployMetadata.abi.find(
-              (abiType) =>
-                (abiType as AbiFunction).name === "encodeBytesOnInstall",
-            ) as AbiFunction | undefined;
+        for (const [i, m] of moduleDeployData.entries()) {
+          let moduleData: `0x${string}` | undefined;
 
-            if (m.initializeParams && moduleInstallParams) {
-              moduleData = encodeAbiParameters(
-                (
-                  moduleInstallParams.inputs as { name: string; type: string }[]
-                ).map((p) => ({
-                  name: p.name,
-                  type: p.type,
-                })),
-                Object.values(m.initializeParams),
-              );
-            }
+          const moduleInstallParams = m.deployMetadata.abi.find(
+            (abiType) =>
+              (abiType as AbiFunction).name === "encodeBytesOnInstall",
+          ) as AbiFunction | undefined;
 
-            const installTransaction = installPublishedModule({
-              contract,
-              account: activeAccount,
-              moduleName: m.deployMetadata.name,
-              publisher: m.deployMetadata.publisher,
-              version: m.deployMetadata.version,
-              moduleData,
-            });
+          if (m.initializeParams && moduleInstallParams) {
+            moduleData = encodeAbiParameters(
+              (
+                moduleInstallParams.inputs as { name: string; type: string }[]
+              ).map((p) => ({
+                name: p.name,
+                type: p.type,
+              })),
+              Object.values(m.initializeParams),
+            );
+          }
 
-            const txResult = await sendTransaction({
-              transaction: installTransaction,
-              account: activeAccount,
-            });
+          const installTransaction = installPublishedModule({
+            contract,
+            account: activeAccount,
+            moduleName: m.deployMetadata.name,
+            publisher: m.deployMetadata.publisher,
+            version: m.deployMetadata.version,
+            moduleData,
+            nonce: currentNonce + i,
+          });
 
-            return await waitForReceipt(txResult);
-          }),
-        );
+          const txResult = await sendTransaction({
+            transaction: installTransaction,
+            account: activeAccount,
+          });
+
+          await waitForReceipt(txResult);
+          // can't handle parallel transactions, so wait a bit
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
       }
 
       deployStatusModal.nextStep();

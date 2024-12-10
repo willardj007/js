@@ -217,7 +217,7 @@ export async function deployContractfromDeployMetadata(
           account,
           modules,
         });
-        return await deployViaAutoFactory({
+        return deployViaAutoFactory({
           client,
           chain,
           account,
