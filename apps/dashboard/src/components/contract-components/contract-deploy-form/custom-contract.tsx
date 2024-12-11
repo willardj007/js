@@ -460,7 +460,7 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
         deployMetadata: m,
         initializeParams:
           m.name === "SuperChainInterop"
-            ? { superchainBridge: "0x4200000000000000000000000000000000000010" }
+            ? { superchainBridge: "0x4200000000000000000000000000000000000028" }
             : params.moduleData[m.name],
       }));
 

@@ -187,7 +187,7 @@ export function DataTable({
             // set superchain bridge address
             else if (showSuperchainBridgeFieldset(paramNames)) {
               returnVal.superchainBridge =
-                "0x4200000000000000000000000000000000000010"; // OP Superchain Bridge
+                "0x4200000000000000000000000000000000000028"; // OP Superchain Bridge
             }
 
             acc[mod.name] = returnVal;
