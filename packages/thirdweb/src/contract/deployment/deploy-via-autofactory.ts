@@ -1,5 +1,8 @@
 import { parseEventLogs } from "../../event/actions/parse-logs.js";
-import { proxyDeployedEvent } from "../../extensions/thirdweb/__generated__/IContractFactory/events/ProxyDeployed.js";
+import {
+  modifiedProxyDeployedEvent,
+  proxyDeployedEvent,
+} from "../../extensions/thirdweb/__generated__/IContractFactory/events/ProxyDeployed.js";
 import { deployProxyByImplementation } from "../../extensions/thirdweb/__generated__/IContractFactory/write/deployProxyByImplementation.js";
 import { eth_blockNumber } from "../../rpc/actions/eth_blockNumber.js";
 import { getRpcClient } from "../../rpc/rpc.js";
@@ -97,8 +100,13 @@ export async function deployViaAutoFactory(
     transaction: tx,
     account,
   });
+
+  // TODO: remove this once the modified version of TWCloneFactory has been published
+  const proxyEvent = salt?.startsWith("0x0101")
+    ? modifiedProxyDeployedEvent()
+    : proxyDeployedEvent();
   const decodedEvent = parseEventLogs({
-    events: [proxyDeployedEvent()],
+    events: [proxyEvent],
     logs: receipt.logs,
   });
   if (decodedEvent.length === 0 || !decodedEvent[0]) {
@@ -143,19 +151,18 @@ export async function deployViaAutoFactoryWithImplementationParams(
         size: 32,
       });
 
-  const asd = {
+  const tx = deployProxyByImplementation({
     contract: cloneFactoryContract,
     data: initializeData || "0x",
     implementation: implementationAddress,
     salt: parsedSalt,
-  };
-  const tx = deployProxyByImplementation(asd);
+  });
   const receipt = await sendAndConfirmTransaction({
     transaction: tx,
     account,
   });
   const decodedEvent = parseEventLogs({
-    events: [proxyDeployedEvent()],
+    events: [modifiedProxyDeployedEvent()],
     logs: receipt.logs,
   });
   if (decodedEvent.length === 0 || !decodedEvent[0]) {

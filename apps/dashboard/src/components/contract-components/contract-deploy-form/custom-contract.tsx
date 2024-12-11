@@ -458,7 +458,10 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
 
       const moduleDeployData = modules?.map((m) => ({
         deployMetadata: m,
-        initializeParams: params.moduleData[m.name],
+        initializeParams:
+          m.name === "SuperChainInterop"
+            ? { superchainBridge: "0x4200000000000000000000000000000000000010" }
+            : params.moduleData[m.name],
       }));
 
       const coreContractAddress = await deployContractfromDeployMetadata({
@@ -480,15 +483,15 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
         chain: walletChain,
       });
 
-      const rpcRequest = getRpcClient({
-        client: thirdwebClient,
-        chain: walletChain,
-      });
-      const currentNonce = await eth_getTransactionCount(rpcRequest, {
-        address: activeAccount.address,
-      });
-
       if (isSuperchainInterop && moduleDeployData) {
+        const rpcRequest = getRpcClient({
+          client: thirdwebClient,
+          chain: walletChain,
+        });
+        const currentNonce = await eth_getTransactionCount(rpcRequest, {
+          address: activeAccount.address,
+        });
+
         for (const [i, m] of moduleDeployData.entries()) {
           let moduleData: `0x${string}` | undefined;
 
@@ -849,7 +852,10 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
               {isModular && modules && modules.length > 0 && (
                 <ModularContractDefaultModulesFieldset
                   form={form}
-                  modules={modules}
+                  modules={modules.filter(
+                    // superchain interop will have a default value for it's install param
+                    (mod) => mod.name !== "SuperChainInterop",
+                  )}
                   isTWPublisher={isTWPublisher}
                 />
               )}

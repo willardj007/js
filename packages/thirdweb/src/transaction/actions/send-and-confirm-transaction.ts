@@ -53,7 +53,5 @@ export async function sendAndConfirmTransaction(
   options: SendTransactionOptions,
 ): Promise<TransactionReceipt> {
   const submittedTx = await sendTransaction(options);
-  const receipt = await waitForReceipt(submittedTx);
-
-  return receipt;
+  return waitForReceipt(submittedTx);
 }

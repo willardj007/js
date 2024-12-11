@@ -185,10 +185,6 @@ export async function deployContractfromDeployMetadata(
           publisher: deployMetadata.publisher,
         });
 
-      console.error("is superchain interop", isSuperchainInterop);
-      console.error("is crosschain: ", isCrosschain);
-      console.error("initialize data: ", initializeData);
-
       // TODO: remove this once the modified version of TWCloneFactory
       // has been published under the thirdweb wallet
       const modifiedCloneFactoryContract = getContract({

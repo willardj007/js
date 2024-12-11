@@ -41,6 +41,16 @@ export type ProxyDeployedEventFilters = Partial<{
 export function proxyDeployedEvent(filters: ProxyDeployedEventFilters = {}) {
   return prepareEvent({
     signature:
+      "event ProxyDeployed(address indexed implementation, address proxy, address indexed deployer)",
+    filters,
+  });
+}
+
+
+// TODO: remove this once the modified version of TWCloneFactory has been published
+export function modifiedProxyDeployedEvent(filters: ProxyDeployedEventFilters = {}) {
+  return prepareEvent({
+    signature:
       "event ProxyDeployed(address indexed implementation, address proxy, address indexed deployer, bytes data)",
     filters,
   });
