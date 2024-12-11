@@ -512,6 +512,8 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
             );
           }
 
+          console.log("nonce used: ", currentNonce + i);
+
           const installTransaction = installPublishedModule({
             contract: coreContract,
             account: activeAccount,

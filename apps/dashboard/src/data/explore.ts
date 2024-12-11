@@ -207,8 +207,9 @@ const CROSS_CHAIN = {
         "deployer.thirdweb.eth/ClaimableERC20",
       ],
       {
-        title: "Modular Token Drop",
-        description: "ERC20 Tokens that others can mint.",
+        title: "OP Superchain Modular Token Drop",
+        description:
+          "ERC-20 Tokens crosschain compatible across OP Superchains",
       },
     ],
   ],

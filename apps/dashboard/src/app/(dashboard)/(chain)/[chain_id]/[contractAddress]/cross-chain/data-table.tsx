@@ -235,6 +235,8 @@ export function DataTable({
             );
           }
 
+          console.log("nonce used: ", currentNonce + i);
+
           const installTransaction = installPublishedModule({
             contract,
             account: activeAccount,
