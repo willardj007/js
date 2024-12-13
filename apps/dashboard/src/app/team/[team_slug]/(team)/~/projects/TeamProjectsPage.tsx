@@ -1,6 +1,9 @@
 "use client";
 
 import type { Project } from "@/api/projects";
+import type { Team } from "@/api/team";
+import { ProjectAvatar } from "@/components/blocks/Avatars/ProjectAvatar";
+import { CopyButton } from "@/components/ui/CopyButton";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -8,13 +11,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { format } from "date-fns";
-import { ChevronDownIcon, SearchIcon } from "lucide-react";
-import Link from "next/link";
-import { useState } from "react";
-
-import { ProjectAvatar } from "@/components/blocks/Avatars/ProjectAvatar";
-import { CopyButton } from "@/components/ui/CopyButton";
 import {
   Select,
   SelectContent,
@@ -23,12 +19,15 @@ import {
 } from "@/components/ui/select";
 import { useDashboardRouter } from "@/lib/DashboardRouter";
 import { LazyCreateAPIKeyDialog } from "components/settings/ApiKeys/Create/LazyCreateAPIKeyDialog";
+import { ChevronDownIcon, SearchIcon } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 
 type SortyById = "name" | "createdAt";
 
 export function TeamProjectsPage(props: {
   projects: Project[];
-  team_slug: string;
+  team: Team;
 }) {
   const { projects } = props;
   const [searchTerm, setSearchTerm] = useState("");
@@ -69,7 +68,7 @@ export function TeamProjectsPage(props: {
           <SelectBy value={sortBy} onChange={setSortBy} />
           <AddNewButton
             createProject={() => setIsCreateProjectDialogOpen(true)}
-            teamMembersSettingsPath={`/team/${props.team_slug}/~/settings/members`}
+            teamMembersSettingsPath={`/team/${props.team.slug}/~/settings/members`}
           />
         </div>
       </div>
@@ -88,7 +87,7 @@ export function TeamProjectsPage(props: {
               <ProjectCard
                 key={project.id}
                 project={project}
-                team_slug={props.team_slug}
+                team_slug={props.team.slug}
               />
             );
           })}
@@ -104,6 +103,9 @@ export function TeamProjectsPage(props: {
           // refresh projects
           router.refresh();
         }}
+        enableNebulaServiceByDefault={props.team.enabledScopes.includes(
+          "nebula",
+        )}
       />
     </div>
   );
@@ -117,31 +119,29 @@ function ProjectCard(props: {
   return (
     <div
       key={project.id}
-      className="relative flex items-center gap-4 rounded-lg border border-border bg-muted/50 p-4 transition-colors hover:bg-muted/70"
+      className="relative flex items-center gap-4 rounded-lg border border-border bg-muted/50 p-5 transition-colors hover:bg-muted/70"
     >
       {/* TODO - set image */}
       <ProjectAvatar className="size-10 rounded-full" src="" />
 
-      <div>
-        <Link
-          className="group static before:absolute before:top-0 before:right-0 before:bottom-0 before:left-0 before:z-0"
-          // remove /connect when we have overview page
-          href={`/team/${team_slug}/${project.slug}`}
-        >
-          <h2 className="font-medium text-base">{project.name}</h2>
-        </Link>
-
-        <p className="mb-1 flex items-center gap-0.5 text-muted-foreground text-xs">
-          {truncate(project.publishableKey, 32)}
+      <div className="flex-grow flex-col gap-1">
+        <div className="flex items-center justify-between gap-2">
+          <Link
+            className="group static before:absolute before:top-0 before:right-0 before:bottom-0 before:left-0 before:z-0"
+            // remove /connect when we have overview page
+            href={`/team/${team_slug}/${project.slug}`}
+          >
+            <h2 className="font-medium text-base">{project.name}</h2>
+          </Link>
           <CopyButton
             text={project.publishableKey}
             iconClassName="z-10 size-3"
-            className="!h-auto !w-auto -translate-x-1 p-2 hover:bg-background"
+            className="!h-auto !w-auto -translate-x-1 p-2 hover:bg-secondary"
           />
-        </p>
+        </div>
 
-        <p className="my-1 text-muted-foreground/70 text-xs">
-          Created on {format(new Date(project.createdAt), "MMM dd, yyyy")}
+        <p className="flex items-center text-muted-foreground text-sm">
+          {truncate(project.publishableKey, 32)}
         </p>
       </div>
     </div>

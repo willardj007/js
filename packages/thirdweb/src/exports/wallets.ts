@@ -96,7 +96,13 @@ export type {
    * @deprecated use InAppWalletSocialAuth instead
    */
   InAppWalletSocialAuth as EmbeddedWalletSocialAuth,
+  InAppWalletCreationOptions,
 } from "../wallets/in-app/core/wallet/types.js";
+
+export type {
+  MultiStepAuthArgsType,
+  SingleStepAuthArgsType,
+} from "../wallets/in-app/core/authentication/types.js";
 
 export {
   preAuthenticate,
@@ -106,6 +112,7 @@ export {
   getUserPhoneNumber,
   getProfiles,
   linkProfile,
+  unlinkProfile,
 } from "../wallets/in-app/web/lib/auth/index.js";
 export type { Profile } from "../wallets/in-app/core/authentication/types.js";
 

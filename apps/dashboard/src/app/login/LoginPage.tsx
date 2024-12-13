@@ -45,7 +45,7 @@ const wallets = [
 
 export function LoginAndOnboardingPage(props: {
   account: Account | undefined;
-  nextPath: string | undefined;
+  redirectPath: string;
 }) {
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-background">
@@ -53,9 +53,6 @@ export function LoginAndOnboardingPage(props: {
         <header className="container flex w-full flex-row items-center justify-between px-6 py-4">
           <div className="flex shrink-0 items-center gap-3">
             <ThirdwebMiniLogo className="size-7 md:size-8" />
-            <h1 className="font-medium text-lg tracking-tight md:text-xl">
-              Get started <span className="max-sm:hidden">with thirdweb</span>
-            </h1>
           </div>
 
           <div className="flex items-center gap-3">
@@ -80,9 +77,19 @@ export function LoginAndOnboardingPage(props: {
         </header>
       </div>
 
-      <main className="container z-10 flex grow flex-col items-center justify-center gap-6 py-12">
-        <ClientOnly ssr={<LoadingCard />}>
-          <PageContent nextPath={props.nextPath} account={props.account} />
+      <main className="container z-10 flex grow flex-col justify-center gap-6 py-12">
+        <ClientOnly
+          ssr={
+            <div className="flex justify-center">
+              <LoadingCard />
+            </div>
+          }
+          className="flex justify-center"
+        >
+          <PageContent
+            redirectPath={props.redirectPath}
+            account={props.account}
+          />
         </ClientOnly>
       </main>
 
@@ -94,7 +101,7 @@ export function LoginAndOnboardingPage(props: {
       />
 
       <Aurora
-        color="hsl(var(--foreground)/9%)"
+        color="hsl(var(--foreground)/7%)"
         pos={{ top: "55%", left: "50%" }}
         size={{ width: "1400px", height: "1300px" }}
       />
@@ -104,14 +111,14 @@ export function LoginAndOnboardingPage(props: {
 
 function LoadingCard() {
   return (
-    <div className="flex min-h-[450px] w-full items-center justify-center rounded-xl border border-border bg-background shadow-lg lg:w-[500px]">
+    <div className="flex min-h-[522px] w-full items-center justify-center rounded-xl border border-border bg-background shadow-lg max-sm:max-w-[358px] lg:min-h-[568px] lg:w-[728px]">
       <Spinner className="size-10" />
     </div>
   );
 }
 
 function PageContent(props: {
-  nextPath: string | undefined;
+  redirectPath: string;
   account: Account | undefined;
 }) {
   const [screen, setScreen] = useState<
@@ -130,11 +137,7 @@ function PageContent(props: {
 
   function onComplete() {
     setScreen({ id: "complete" });
-    if (props.nextPath && isValidRedirectPath(props.nextPath)) {
-      router.replace(props.nextPath);
-    } else {
-      router.replace("/team");
-    }
+    router.replace(props.redirectPath);
   }
 
   if (connectionStatus === "connecting") {
@@ -151,7 +154,7 @@ function PageContent(props: {
         <LazyOnboardingUI
           account={screen.account}
           onComplete={onComplete}
-          redirectPath={props.nextPath || "/team"}
+          redirectPath={props.redirectPath}
           redirectToCheckout={redirectToCheckout}
         />
       </Suspense>
@@ -216,19 +219,6 @@ function CustomConnectEmbed(props: {
       termsOfServiceUrl="/terms"
     />
   );
-}
-
-function isValidRedirectPath(encodedPath: string): boolean {
-  try {
-    // Decode the URI component
-    const decodedPath = decodeURIComponent(encodedPath);
-    // ensure the path always starts with a _single_ slash
-    // double slash could be interpreted as `//example.com` which is not allowed
-    return decodedPath.startsWith("/") && !decodedPath.startsWith("//");
-  } catch {
-    // If decoding fails, return false
-    return false;
-  }
 }
 
 type AuroraProps = {
