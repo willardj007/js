@@ -31,6 +31,7 @@ import {
   showSuperchainBridgeFieldset,
 } from "components/contract-components/contract-deploy-form/modular-contract-default-modules-fieldset";
 import { useTxNotifications } from "hooks/useTxNotifications";
+import Link from "next/link";
 import {
   ZERO_ADDRESS,
   defineChain,
@@ -87,6 +88,20 @@ export function DataTable({
     {
       accessorKey: "network",
       header: "Network",
+      cell: ({ row }) => {
+        if (row.getValue("status") === "DEPLOYED") {
+          return (
+            <Link
+              target="_blank"
+              className="text-blue-500 underline"
+              href={`/${row.getValue("chainId")}/${coreContract.address}`}
+            >
+              {row.getValue("network")}
+            </Link>
+          );
+        }
+        return row.getValue("network");
+      },
     },
     {
       accessorKey: "chainId",
