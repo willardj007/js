@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ToolTipLabel } from "@/components/ui/tooltip";
 import { getThirdwebClient } from "@/constants/thirdweb.server";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -207,20 +208,27 @@ export function DataTable({
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <div className="flex">
-                      <Input className="rounded-r-0 border-r-none" {...field} />
-                      <Button
-                        type="button"
-                        onClick={() =>
-                          crossChainTransferMutation.mutate(
-                            row.getValue("chainId"),
-                          )
-                        }
-                        className="rounded-lg rounded-r-0 border border-r-none"
-                      >
-                        Transfer
-                      </Button>
-                    </div>
+                    <ToolTipLabel label="Coming soon">
+                      <div className="flex">
+                        <Input
+                          className="w-22 rounded-r-none border-r-0"
+                          placeholder="amount"
+                          {...field}
+                        />
+                        <Button
+                          type="button"
+                          disabled
+                          onClick={() =>
+                            crossChainTransferMutation.mutate(
+                              row.getValue("chainId"),
+                            )
+                          }
+                          className="rounded-lg rounded-l-none border border-l-0"
+                        >
+                          Transfer
+                        </Button>
+                      </div>
+                    </ToolTipLabel>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
