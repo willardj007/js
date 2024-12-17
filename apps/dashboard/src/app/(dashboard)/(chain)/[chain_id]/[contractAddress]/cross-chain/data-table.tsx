@@ -1,7 +1,14 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -12,6 +19,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getThirdwebClient } from "@/constants/thirdweb.server";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import {
   type ColumnDef,
   flexRender,
@@ -32,13 +41,16 @@ import {
 } from "components/contract-components/contract-deploy-form/modular-contract-default-modules-fieldset";
 import { useTxNotifications } from "hooks/useTxNotifications";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
 import {
   ZERO_ADDRESS,
   defineChain,
   eth_getTransactionCount,
   getContract,
   getRpcClient,
+  prepareContractCall,
   readContract,
+  sendAndConfirmTransaction,
   sendTransaction,
   waitForReceipt,
 } from "thirdweb";
@@ -55,6 +67,7 @@ import {
   encodeAbiParameters,
   padHex,
 } from "thirdweb/utils";
+import { z } from "zod";
 
 type CrossChain = {
   id: number;
@@ -62,6 +75,22 @@ type CrossChain = {
   chainId: number;
   status: "DEPLOYED" | "NOT_DEPLOYED";
 };
+
+type ChainId = "84532" | "11155420" | "919" | "111557560" | "999999999";
+
+const formSchema = z.object({
+  amounts: z.object({
+    "84532": z.string(),
+    "11155420": z.string(),
+    "919": z.string(),
+    "111557560": z.string(),
+    "999999999": z.string(),
+  }),
+});
+type FormSchema = z.output<typeof formSchema>;
+
+const positiveIntegerRegex = /^[0-9]\d*$/;
+const superchainBridgeAddress = "0x4200000000000000000000000000000000000028";
 
 export function DataTable({
   data,
@@ -83,6 +112,64 @@ export function DataTable({
     "Successfully deployed contract",
     "Failed to deploy contract",
   );
+
+  const form = useForm<FormSchema>({
+    resolver: zodResolver(formSchema),
+    values: {
+      amounts: {
+        "84532": "", // Base
+        "11155420": "", // OP testnet
+        "919": "", // Mode Network
+        "111557560": "", // Cyber
+        "999999999": "", // Zora
+      },
+    },
+  });
+
+  const crossChainTransfer = async (chainId: ChainId) => {
+    if (!activeAccount) {
+      throw new Error("Account not connected");
+    }
+    const amount = form.getValues().amounts[chainId];
+    if (!positiveIntegerRegex.test(amount)) {
+      form.setError(`amounts.${chainId}`, { message: "Invalid Amount" });
+      return;
+    }
+
+    const superChainBridge = getContract({
+      address: superchainBridgeAddress,
+      chain: coreContract.chain,
+      client: coreContract.client,
+    });
+
+    const sendErc20Tx = prepareContractCall({
+      contract: superChainBridge,
+      method:
+        "function sendERC20(address _token, address _to, uint256 _amount, uint256 _chainId)",
+      params: [
+        coreContract.address,
+        activeAccount.address,
+        BigInt(amount),
+        BigInt(chainId),
+      ],
+    });
+
+    await sendAndConfirmTransaction({
+      account: activeAccount,
+      transaction: sendErc20Tx,
+    });
+  };
+
+  const crossChainTransferNotifications = useTxNotifications(
+    "Successfully submitted cross chain transfer",
+    "Failed to submit cross chain transfer",
+  );
+
+  const crossChainTransferMutation = useMutation({
+    mutationFn: crossChainTransfer,
+    onSuccess: crossChainTransferNotifications.onSuccess,
+    onError: crossChainTransferNotifications.onError,
+  });
 
   const columns: ColumnDef<CrossChain>[] = [
     {
@@ -112,10 +199,40 @@ export function DataTable({
       header: "Status",
       cell: ({ row }) => {
         if (row.getValue("status") === "DEPLOYED") {
-          return <Badge variant="success">Deployed</Badge>;
+          return (
+            <FormField
+              disabled // TODO: undo once the OP interop upgrade goes through
+              control={form.control}
+              name={`amounts.${row.getValue("chainId") as ChainId}`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <div className="flex">
+                      <Input className="rounded-r-0 border-r-none" {...field} />
+                      <Button
+                        type="button"
+                        onClick={() =>
+                          crossChainTransferMutation.mutate(
+                            row.getValue("chainId"),
+                          )
+                        }
+                        className="rounded-lg rounded-r-0 border border-r-none"
+                      >
+                        Transfer
+                      </Button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          );
         }
         return (
-          <Button onClick={() => deployContract(row.getValue("chainId"))}>
+          <Button
+            type="button"
+            onClick={() => deployContract(row.getValue("chainId"))}
+          >
             Deploy
           </Button>
         );
@@ -250,8 +367,6 @@ export function DataTable({
             );
           }
 
-          console.log("nonce used: ", currentNonce + i);
-
           const installTransaction = installPublishedModule({
             contract,
             account: activeAccount,
@@ -285,42 +400,49 @@ export function DataTable({
   };
 
   return (
-    <TableContainer>
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </TableHead>
-                );
-              })}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows.map((row) => (
-            <TableRow
-              key={row.id}
-              data-state={row.getIsSelected() && "selected"}
-            >
-              {row.getVisibleCells().map((cell) => (
-                <TableCell key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
+    <Form {...form}>
+      <form>
+        <TableContainer>
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
               ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      <DeployStatusModal deployStatusModal={deployStatusModal} />
-    </TableContainer>
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <DeployStatusModal deployStatusModal={deployStatusModal} />
+        </TableContainer>
+      </form>
+    </Form>
   );
 }
