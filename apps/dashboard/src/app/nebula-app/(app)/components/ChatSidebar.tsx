@@ -1,14 +1,18 @@
 "use client";
 import { ScrollShadow } from "@/components/ui/ScrollShadow/ScrollShadow";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useStore } from "@/lib/reactive";
 import type { Account } from "@3rdweb-sdk/react/hooks/useApi";
-import { ChevronRightIcon, MessageSquareDashedIcon } from "lucide-react";
+import {
+  ChevronRightIcon,
+  FlaskConicalIcon,
+  MessageSquareDashedIcon,
+} from "lucide-react";
 import Link from "next/link";
 import type { TruncatedSessionInfo } from "../api/types";
+import { useNewChatPageLink } from "../hooks/useNewChatPageLink";
 import { useSessionsWithLocalOverrides } from "../hooks/useSessionsWithLocalOverrides";
 import { NebulaIcon } from "../icons/NebulaIcon";
-import { newChatPageUrlStore } from "../stores";
 import { ChatSidebarLink } from "./ChatSidebarLink";
 import { NebulaAccountButton } from "./NebulaAccountButton";
 
@@ -24,10 +28,15 @@ export function ChatSidebar(props: {
 
   return (
     <div className="flex h-full flex-col p-2">
-      <div className="flex justify-start p-2">
+      <div className="flex items-center justify-start gap-3 p-2 lg:justify-between">
         <Link href="/">
           <NebulaIcon className="size-8 text-foreground" />
         </Link>
+
+        <Badge variant="outline" className="gap-1">
+          <FlaskConicalIcon className="size-2.5" />
+          Alpha
+        </Badge>
       </div>
 
       <div className="p-2">
@@ -79,9 +88,4 @@ export function ChatSidebar(props: {
       />
     </div>
   );
-}
-
-export function useNewChatPageLink() {
-  const newChatPage = useStore(newChatPageUrlStore);
-  return newChatPage || "/chat";
 }

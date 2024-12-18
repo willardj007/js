@@ -4,6 +4,7 @@ module.exports = [
   "/",
   "/pricing",
   "/bounties",
+  "/contact-us",
   // -- product landing pages --
   // -- connect
   "/connect",
@@ -34,7 +35,7 @@ module.exports = [
   "/privacy-policy",
   // -- community pages --
   "/community/ambassadors",
-  "/community/ambassadors/startup-program",
+  "/community/startup-program",
   // -- grants --
   "/grant/superchain",
 ];

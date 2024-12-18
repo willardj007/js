@@ -5,11 +5,8 @@ import { AutoResizeTextarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { ArrowUpIcon, CircleStopIcon } from "lucide-react";
 import { useState } from "react";
-import type { ExecuteConfig } from "../api/types";
 
 export function Chatbar(props: {
-  updateConfig: (config: ExecuteConfig) => void;
-  config: ExecuteConfig;
   sendMessage: (message: string) => void;
   isChatStreaming: boolean;
   abortChatStream: () => void;
@@ -23,6 +20,10 @@ export function Chatbar(props: {
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         onKeyDown={(e) => {
+          // ignore if shift key is pressed to allow entering new lines
+          if (e.shiftKey) {
+            return;
+          }
           if (e.key === "Enter" && !props.isChatStreaming) {
             setMessage("");
             props.sendMessage(message);

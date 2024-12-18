@@ -145,7 +145,7 @@ function Story() {
           authToken="xxxxx"
           isChatStreaming={false}
           sessionId="xxxxx"
-          account={accountStub()}
+          twAccount={accountStub()}
           messages={[
             {
               text: randomLorem(10),
@@ -157,6 +157,8 @@ function Story() {
             },
           ]}
           client={getThirdwebClient()}
+          enableAutoScroll={true}
+          setEnableAutoScroll={() => {}}
         />
       </BadgeContainer>
 
@@ -166,7 +168,9 @@ function Story() {
           authToken="xxxxx"
           isChatStreaming={false}
           sessionId="xxxxx"
-          account={accountStub()}
+          twAccount={accountStub()}
+          enableAutoScroll={true}
+          setEnableAutoScroll={() => {}}
           messages={[
             {
               text: randomLorem(10),
@@ -182,11 +186,13 @@ function Story() {
 
       <BadgeContainer label="User + Assistant responses">
         <Chats
+          enableAutoScroll={true}
+          setEnableAutoScroll={() => {}}
           client={getThirdwebClient()}
           authToken="xxxxx"
           isChatStreaming={false}
           sessionId="xxxxx"
-          account={accountStub()}
+          twAccount={accountStub()}
           messages={[
             {
               text: randomLorem(10),

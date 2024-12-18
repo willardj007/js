@@ -1,7 +1,13 @@
 import { NEXT_PUBLIC_NEBULA_URL } from "@/constants/env";
 import { fetchWithAuthToken } from "../../../../utils/fetchWithAuthToken";
 import type { ContextFilters } from "./chat";
-import type { ExecuteConfig, SessionInfo, TruncatedSessionInfo } from "./types";
+import type {
+  DeletedSessionInfo,
+  ExecuteConfig,
+  SessionInfo,
+  TruncatedSessionInfo,
+  UpdatedSessionInfo,
+} from "./types";
 
 // TODO - get the spec for return types on /session POST and PUT
 
@@ -21,6 +27,7 @@ export async function createSession(params: {
     body.context_filter = {
       chain_ids: params.contextFilters.chainIds || [],
       contract_addresses: params.contextFilters.contractAddresses || [],
+      wallet_addresses: params.contextFilters.walletAddresses || [],
     };
   }
 
@@ -56,6 +63,7 @@ export async function updateSession(params: {
     body.context_filter = {
       chain_ids: params.contextFilters.chainIds || [],
       contract_addresses: params.contextFilters.contractAddresses || [],
+      wallet_addresses: params.contextFilters.walletAddresses || [],
     };
   }
 
@@ -71,7 +79,7 @@ export async function updateSession(params: {
   }
   const data = await res.json();
 
-  return data.result as SessionInfo;
+  return data.result as UpdatedSessionInfo;
 }
 
 export async function deleteSession(params: {
@@ -89,10 +97,7 @@ export async function deleteSession(params: {
   }
   const data = await res.json();
 
-  return data.result as {
-    id: string;
-    deleted_at: string;
-  };
+  return data.result as DeletedSessionInfo;
 }
 
 export async function getSessions(params: {
