@@ -17,6 +17,11 @@ type ProcessRefDeploymentsOptions = {
   paramValue: string | ImplementationConstructorParam;
 };
 
+/**
+ * Processes published contract references in constructor params. Deploys recursively if needed.
+ * @returns Param value after processing references.
+ * @internal
+ */
 export async function processRefDeployments(
   options: ProcessRefDeploymentsOptions,
 ): Promise<string | string[]> {

@@ -10,6 +10,11 @@ type ComputeRefDeploymentsOptions = {
   paramValue: string | ImplementationConstructorParam;
 };
 
+/**
+ * Computes addresses for published contract references in constructor params.
+ * @returns Param value after processing references.
+ * @internal
+ */
 export async function computeRefDeployments(
   options: ComputeRefDeploymentsOptions,
 ): Promise<string | string[]> {
