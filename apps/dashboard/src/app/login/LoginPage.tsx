@@ -48,7 +48,7 @@ export function LoginAndOnboardingPage(props: {
   redirectPath: string;
 }) {
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden bg-background">
+    <div className="relative flex min-h-dvh flex-col overflow-hidden bg-background">
       <div className="border-b bg-background">
         <header className="container flex w-full flex-row items-center justify-between px-6 py-4">
           <div className="flex shrink-0 items-center gap-3">
@@ -77,6 +77,20 @@ export function LoginAndOnboardingPage(props: {
         </header>
       </div>
 
+      <LoginAndOnboardingPageContent
+        account={props.account}
+        redirectPath={props.redirectPath}
+      />
+    </div>
+  );
+}
+
+export function LoginAndOnboardingPageContent(props: {
+  account: Account | undefined;
+  redirectPath: string;
+}) {
+  return (
+    <div className="relative flex grow flex-col">
       <main className="container z-10 flex grow flex-col justify-center gap-6 py-12">
         <ClientOnly
           ssr={

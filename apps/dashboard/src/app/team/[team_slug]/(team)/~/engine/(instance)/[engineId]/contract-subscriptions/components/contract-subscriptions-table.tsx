@@ -33,7 +33,7 @@ import { useV5DashboardChain } from "lib/v5-adapter";
 import { InfoIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
 import { eth_getBlockByNumber, getRpcClient } from "thirdweb";
-import { shortenAddress as shortenAddresThrows } from "thirdweb/utils";
+import { shortenAddress as shortenAddressThrows } from "thirdweb/utils";
 import { Button, Card, FormLabel, LinkButton, Text } from "tw-components";
 
 function shortenAddress(address: string) {
@@ -42,7 +42,7 @@ function shortenAddress(address: string) {
   }
 
   try {
-    return shortenAddresThrows(address);
+    return shortenAddressThrows(address);
   } catch {
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   }
@@ -81,7 +81,7 @@ export const ContractSubscriptionTable: React.FC<
         const chain = idToChain.get(cell.getValue());
         return (
           <Flex align="center" gap={2}>
-            <ChainIcon size={12} ipfsSrc={chain?.icon?.url} />
+            <ChainIcon className="size-3" ipfsSrc={chain?.icon?.url} />
             <Text>{chain?.name ?? "N/A"}</Text>
           </Flex>
         );
@@ -399,7 +399,7 @@ const RemoveModal = ({
               <FormControl>
                 <FormLabel>Chain</FormLabel>
                 <Flex align="center" gap={2}>
-                  <ChainIcon size={12} ipfsSrc={chain?.icon?.url} />
+                  <ChainIcon className="size-3" ipfsSrc={chain?.icon?.url} />
                   <Text>{chain?.name ?? "N/A"}</Text>
                 </Flex>
               </FormControl>

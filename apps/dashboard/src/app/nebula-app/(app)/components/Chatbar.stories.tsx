@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { BadgeContainer, mobileViewport } from "../../../../stories/utils";
-import { Chatbar } from "./ChatBar";
+import { ChatBar } from "./ChatBar";
 
 const meta = {
   title: "Nebula/Chatbar",
@@ -29,44 +29,19 @@ export const Mobile: Story = {
 function Story() {
   return (
     <div className="container flex max-w-[800px] flex-col gap-14 py-10">
-      <BadgeContainer label="Not Streaming - Client Config">
-        <Chatbar
+      <BadgeContainer label="Not Streaming">
+        <ChatBar
           abortChatStream={() => {}}
-          config={{
-            mode: "client",
-            signer_wallet_address: "xxxxx",
-          }}
           isChatStreaming={false}
           sendMessage={() => {}}
-          updateConfig={() => {}}
         />
       </BadgeContainer>
 
-      <BadgeContainer label="Streaming - Client Config">
-        <Chatbar
+      <BadgeContainer label="Streaming ">
+        <ChatBar
           abortChatStream={() => {}}
-          config={{
-            mode: "client",
-            signer_wallet_address: "xxxxx",
-          }}
           isChatStreaming={true}
           sendMessage={() => {}}
-          updateConfig={() => {}}
-        />
-      </BadgeContainer>
-
-      <BadgeContainer label="Not Streaming - Engine Config">
-        <Chatbar
-          abortChatStream={() => {}}
-          config={{
-            mode: "engine",
-            engine_authorization_token: "xxxxx",
-            engine_backend_wallet_address: "0x1234",
-            engine_url: "https://some-engine-url.com",
-          }}
-          isChatStreaming={false}
-          sendMessage={() => {}}
-          updateConfig={() => {}}
         />
       </BadgeContainer>
     </div>

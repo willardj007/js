@@ -1,16 +1,24 @@
 "use client";
-
-/* eslint-disable no-restricted-syntax */
-import { ScrollShadow } from "@/components/ui/ScrollShadow/ScrollShadow";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useThirdwebClient } from "@/constants/thirdweb.client";
 import type { Account } from "@3rdweb-sdk/react/hooks/useApi";
-import { useMutation } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { ArrowRightIcon } from "lucide-react";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
 import { type ContextFilters, promptNebula } from "../api/chat";
 import { createSession, updateSession } from "../api/session";
 import type { ExecuteConfig, SessionInfo } from "../api/types";
 import { newChatPageUrlStore, newSessionsStore } from "../stores";
-import { Chatbar } from "./ChatBar";
+import { ChatBar } from "./ChatBar";
 import { type ChatMessage, Chats } from "./Chats";
 import ContextFiltersButton from "./ContextFilters";
 import { EmptyStateChatPageContent } from "./EmptyStateChatPageContent";
@@ -18,40 +26,110 @@ import { EmptyStateChatPageContent } from "./EmptyStateChatPageContent";
 export function ChatPageContent(props: {
   session: SessionInfo | undefined;
   authToken: string;
-  accountAddress: string;
   type: "landing" | "new-chat";
   account: Account;
+  initialPrompt: string | undefined;
 }) {
-  const client = useThirdwebClient();
+  const address = useActiveAccount()?.address;
+  const activeChain = useActiveWalletChain();
+  const client = useThirdwebClient(props.authToken);
   const [userHasSubmittedMessage, setUserHasSubmittedMessage] = useState(false);
   const [messages, setMessages] = useState<Array<ChatMessage>>(() => {
     if (props.session?.history) {
-      return props.session.history.map((message) => ({
-        text: message.content,
-        type: message.role,
-        request_id: undefined,
-      }));
+      const _messages: ChatMessage[] = [];
+
+      for (const message of props.session.history) {
+        if (message.role === "action") {
+          try {
+            const content = JSON.parse(message.content) as {
+              session_id: string;
+              data: string;
+              type: "sign_transaction" | (string & {});
+            };
+
+            if (content.type === "sign_transaction") {
+              const txData = JSON.parse(content.data);
+              if (
+                typeof txData === "object" &&
+                txData !== null &&
+                txData.chainId
+              ) {
+                _messages.push({
+                  type: "send_transaction",
+                  data: txData,
+                });
+              }
+            }
+          } catch {
+            // ignore
+          }
+        } else {
+          _messages.push({
+            text: message.content,
+            type: message.role,
+            request_id: undefined,
+          });
+        }
+      }
+
+      return _messages;
     }
     return [];
   });
 
-  const [_config, setConfig] = useState<ExecuteConfig | null>();
-  const [contextFilters, setContextFilters] = useState<
+  const [hasUserUpdatedContextFilters, setHasUserUpdatedContextFilters] =
+    useState(false);
+
+  const [contextFilters, _setContextFilters] = useState<
     ContextFilters | undefined
   >(() => {
     const contextFilterRes = props.session?.context_filter;
-    if (contextFilterRes) {
-      return {
-        chainIds: contextFilterRes.chain_ids,
-        contractAddresses: contextFilterRes.contract_addresses,
-      };
-    }
+    const value: ContextFilters = {
+      chainIds: contextFilterRes?.chain_ids || undefined,
+      contractAddresses: contextFilterRes?.contract_addresses || undefined,
+      walletAddresses: contextFilterRes?.wallet_addresses || undefined,
+    };
+
+    return value;
   });
 
-  const config = _config || {
-    mode: "client",
-    signer_wallet_address: props.accountAddress,
-  };
+  const setContextFilters = useCallback((v: ContextFilters | undefined) => {
+    _setContextFilters(v);
+    setHasUserUpdatedContextFilters(true);
+  }, []);
+
+  const isNewSession = !props.session;
+
+  // if this is a new session, user has not manually updated context filters
+  // update the context filters to the current user's wallet address and chain id
+  // eslint-disable-next-line no-restricted-syntax
+  useEffect(() => {
+    if (!isNewSession || hasUserUpdatedContextFilters) {
+      return;
+    }
+
+    _setContextFilters((_contextFilters) => {
+      const updatedContextFilters: ContextFilters = _contextFilters
+        ? { ..._contextFilters }
+        : {};
+
+      updatedContextFilters.walletAddresses = address ? [address] : [];
+      updatedContextFilters.chainIds = activeChain
+        ? [activeChain.id.toString()]
+        : [];
+
+      return updatedContextFilters;
+    });
+  }, [address, isNewSession, hasUserUpdatedContextFilters, activeChain]);
+
+  const config: ExecuteConfig | null = useMemo(() => {
+    return address
+      ? {
+          mode: "client",
+          signer_wallet_address: address,
+        }
+      : null;
+  }, [address]);
 
   const [sessionId, _setSessionId] = useState<string | undefined>(
     props.session?.id,
@@ -61,34 +139,28 @@ export function ChatPageContent(props: {
     AbortController | undefined
   >();
 
-  function setSessionId(sessionId: string) {
-    _setSessionId(sessionId);
-    // update page URL without reloading
-    window.history.replaceState({}, "", `/chat/${sessionId}`);
+  const setSessionId = useCallback(
+    (sessionId: string) => {
+      _setSessionId(sessionId);
+      // update page URL without reloading
+      window.history.replaceState({}, "", `/chat/${sessionId}`);
 
-    // if the current page is landing page, link to /chat
-    // if current page is new /chat page, link to landing page
-    if (props.type === "landing") {
-      newChatPageUrlStore.setValue("/chat");
-    } else {
-      newChatPageUrlStore.setValue("/");
-    }
-  }
+      // if the current page is landing page, link to /chat
+      // if current page is new /chat page, link to landing page
+      if (props.type === "landing") {
+        newChatPageUrlStore.setValue("/chat");
+      } else {
+        newChatPageUrlStore.setValue("/");
+      }
+    },
+    [props.type],
+  );
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isChatStreaming, setIsChatStreaming] = useState(false);
-  const [isUserSubmittedMessage, setIsUserSubmittedMessage] = useState(false);
+  const [enableAutoScroll, setEnableAutoScroll] = useState(false);
+  const [showConnectModal, setShowConnectModal] = useState(false);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
-  useEffect(() => {
-    if (!isUserSubmittedMessage) {
-      return;
-    }
-
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isUserSubmittedMessage]);
-
-  async function initSession() {
+  const initSession = useCallback(async () => {
     const session = await createSession({
       authToken: props.authToken,
       config,
@@ -96,204 +168,207 @@ export function ChatPageContent(props: {
     });
     setSessionId(session.id);
     return session;
-  }
+  }, [config, contextFilters, props.authToken, setSessionId]);
 
-  async function handleSendMessage(message: string) {
-    setUserHasSubmittedMessage(true);
-    setMessages((prev) => [
-      ...prev,
-      { text: message, type: "user" },
-      // instant loading indicator feedback to user
-      {
-        type: "presence",
-        text: "Thinking...",
-      },
-    ]);
-
-    setIsChatStreaming(true);
-    setIsUserSubmittedMessage(true);
-    const abortController = new AbortController();
-
-    try {
-      // Ensure we have a session ID
-      let currentSessionId = sessionId;
-      if (!currentSessionId) {
-        const session = await initSession();
-        currentSessionId = session.id;
+  const handleSendMessage = useCallback(
+    async (message: string) => {
+      if (!address) {
+        setShowConnectModal(true);
+        return;
       }
+      setUserHasSubmittedMessage(true);
+      setMessages((prev) => [
+        ...prev,
+        { text: message, type: "user" },
+        // instant loading indicator feedback to user
+        {
+          type: "presence",
+          text: "Thinking...",
+        },
+      ]);
 
-      let requestIdForMessage = "";
+      setIsChatStreaming(true);
+      setEnableAutoScroll(true);
+      const abortController = new AbortController();
 
-      // add this session on sidebar
-      if (messages.length === 0) {
-        const prevValue = newSessionsStore.getValue();
-        newSessionsStore.setValue([
-          {
-            id: currentSessionId,
-            title: message,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-          ...prevValue,
-        ]);
-      }
+      try {
+        // Ensure we have a session ID
+        let currentSessionId = sessionId;
+        if (!currentSessionId) {
+          const session = await initSession();
+          currentSessionId = session.id;
+        }
 
-      setChatAbortController(abortController);
+        let requestIdForMessage = "";
 
-      await promptNebula({
-        abortController,
-        message: message,
-        sessionId: currentSessionId,
-        config: config,
-        authToken: props.authToken,
-        handleStream(res) {
-          if (abortController.signal.aborted) {
-            return;
-          }
+        // add this session on sidebar
+        if (messages.length === 0) {
+          const prevValue = newSessionsStore.getValue();
+          newSessionsStore.setValue([
+            {
+              id: currentSessionId,
+              title: message,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            ...prevValue,
+          ]);
+        }
 
-          if (res.event === "init") {
-            requestIdForMessage = res.data.request_id;
-          }
+        setChatAbortController(abortController);
 
-          if (res.event === "delta") {
-            setMessages((prev) => {
-              const lastMessage = prev[prev.length - 1];
-              // if last message is presence, overwrite it
-              if (lastMessage?.type === "presence") {
+        await promptNebula({
+          abortController,
+          message: message,
+          sessionId: currentSessionId,
+          config: config,
+          authToken: props.authToken,
+          handleStream(res) {
+            if (abortController.signal.aborted) {
+              return;
+            }
+
+            if (res.event === "init") {
+              requestIdForMessage = res.data.request_id;
+            }
+
+            if (res.event === "delta") {
+              setMessages((prev) => {
+                const lastMessage = prev[prev.length - 1];
+                // if last message is presence, overwrite it
+                if (lastMessage?.type === "presence") {
+                  return [
+                    ...prev.slice(0, -1),
+                    {
+                      text: res.data.v,
+                      type: "assistant",
+                      request_id: requestIdForMessage,
+                    },
+                  ];
+                }
+
+                // if last message is from chat, append to it
+                if (lastMessage?.type === "assistant") {
+                  return [
+                    ...prev.slice(0, -1),
+                    {
+                      text: lastMessage.text + res.data.v,
+                      type: "assistant",
+                      request_id: requestIdForMessage,
+                    },
+                  ];
+                }
+
+                // otherwise, add a new message
                 return [
-                  ...prev.slice(0, -1),
+                  ...prev,
                   {
                     text: res.data.v,
                     type: "assistant",
                     request_id: requestIdForMessage,
                   },
                 ];
-              }
-
-              // if last message is from chat, append to it
-              if (lastMessage?.type === "assistant") {
-                return [
-                  ...prev.slice(0, -1),
-                  {
-                    text: lastMessage.text + res.data.v,
-                    type: "assistant",
-                    request_id: requestIdForMessage,
-                  },
-                ];
-              }
-
-              // otherwise, add a new message
-              return [
-                ...prev,
-                {
-                  text: res.data.v,
-                  type: "assistant",
-                  request_id: requestIdForMessage,
-                },
-              ];
-            });
-          }
-
-          if (res.event === "presence") {
-            setMessages((prev) => {
-              const lastMessage = prev[prev.length - 1];
-              // if last message is presence, overwrite it
-              if (lastMessage?.type === "presence") {
-                return [
-                  ...prev.slice(0, -1),
-                  { text: res.data.data, type: "presence" },
-                ];
-              }
-              // otherwise, add a new message
-              return [...prev, { text: res.data.data, type: "presence" }];
-            });
-          }
-
-          if (res.event === "action") {
-            if (res.type === "sign_transaction") {
-              setMessages((prev) => {
-                let prevMessages = prev;
-                // if last message is presence, remove it
-                if (
-                  prevMessages[prevMessages.length - 1]?.type === "presence"
-                ) {
-                  prevMessages = prevMessages.slice(0, -1);
-                }
-
-                return [
-                  ...prevMessages,
-                  {
-                    type: "send_transaction",
-                    data: res.data,
-                  },
-                ];
               });
             }
-          }
-        },
-        contextFilters: contextFilters,
-      });
-    } catch (error) {
-      if (abortController.signal.aborted) {
-        return;
-      }
-      console.error(error);
 
-      setMessages((prev) => {
-        const newMessages = prev.slice(
-          0,
-          prev[prev.length - 1]?.type === "presence" ? -1 : undefined,
-        );
+            if (res.event === "presence") {
+              setMessages((prev) => {
+                const lastMessage = prev[prev.length - 1];
+                // if last message is presence, overwrite it
+                if (lastMessage?.type === "presence") {
+                  return [
+                    ...prev.slice(0, -1),
+                    { text: res.data.data, type: "presence" },
+                  ];
+                }
+                // otherwise, add a new message
+                return [...prev, { text: res.data.data, type: "presence" }];
+              });
+            }
 
-        // add error message
-        newMessages.push({
-          text: `Error: ${error instanceof Error ? error.message : "Failed to execute command"}`,
-          type: "error",
+            if (res.event === "action") {
+              if (res.type === "sign_transaction") {
+                setMessages((prev) => {
+                  let prevMessages = prev;
+                  // if last message is presence, remove it
+                  if (
+                    prevMessages[prevMessages.length - 1]?.type === "presence"
+                  ) {
+                    prevMessages = prevMessages.slice(0, -1);
+                  }
+
+                  return [
+                    ...prevMessages,
+                    {
+                      type: "send_transaction",
+                      data: res.data,
+                    },
+                  ];
+                });
+              }
+            }
+          },
+          contextFilters: contextFilters,
         });
+      } catch (error) {
+        if (abortController.signal.aborted) {
+          return;
+        }
+        console.error(error);
 
-        return newMessages;
-      });
-    } finally {
-      setIsChatStreaming(false);
-    }
-  }
+        setMessages((prev) => {
+          const newMessages = prev.slice(
+            0,
+            prev[prev.length - 1]?.type === "presence" ? -1 : undefined,
+          );
 
-  async function handleUpdateConfig(newConfig: ExecuteConfig) {
-    setConfig(newConfig);
+          // add error message
+          newMessages.push({
+            text: `Error: ${error instanceof Error ? error.message : "Failed to execute command"}`,
+            type: "error",
+          });
 
-    try {
-      if (!sessionId) {
-        // If no session exists, create a new one
-        await initSession();
-      } else {
-        await updateSession({
-          authToken: props.authToken,
-          config: newConfig,
-          sessionId,
-          contextFilters,
+          return newMessages;
         });
+      } finally {
+        setIsChatStreaming(false);
+        setEnableAutoScroll(false);
       }
-    } catch (error) {
-      console.error("Failed to update session", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          text: `Error: Failed to ${sessionId ? "update" : "create"} session`,
-          type: "error",
-        },
-      ]);
-    }
-  }
+    },
+    [
+      sessionId,
+      contextFilters,
+      config,
+      props.authToken,
+      messages.length,
+      initSession,
+      address,
+    ],
+  );
 
-  const updateConfig = useMutation({
-    mutationFn: handleUpdateConfig,
-  });
+  const hasDoneAutoPrompt = useRef(false);
+
+  // eslint-disable-next-line no-restricted-syntax
+  useEffect(() => {
+    if (
+      props.initialPrompt &&
+      messages.length === 0 &&
+      !hasDoneAutoPrompt.current
+    ) {
+      hasDoneAutoPrompt.current = true;
+      handleSendMessage(props.initialPrompt);
+    }
+  }, [props.initialPrompt, messages.length, handleSendMessage]);
 
   const showEmptyState = !userHasSubmittedMessage && messages.length === 0;
 
   return (
     <div className="flex grow flex-col overflow-hidden">
-      <header className="flex justify-end border-b bg-background p-4">
+      <WalletDisconnectedDialog
+        open={showConnectModal}
+        onOpenChange={setShowConnectModal}
+      />
+      <header className="flex justify-start border-b bg-background p-4">
         <ContextFiltersButton
           contextFilters={contextFilters}
           setContextFilters={setContextFilters}
@@ -310,55 +385,40 @@ export function ChatPageContent(props: {
           }}
         />
       </header>
-      <div className="container relative flex max-w-[800px] grow flex-col overflow-hidden rounded-lg pb-6">
+      <div className="relative flex grow flex-col overflow-hidden rounded-lg pb-6">
         {showEmptyState ? (
-          <div className="fade-in-0 flex grow animate-in flex-col justify-center">
-            <EmptyStateChatPageContent
-              sendMessage={handleSendMessage}
-              config={config}
-              updateConfig={() => {
-                updateConfig.mutate(config);
-              }}
-            />
+          <div className="fade-in-0 container flex max-w-[800px] grow animate-in flex-col justify-center">
+            <EmptyStateChatPageContent sendMessage={handleSendMessage} />
           </div>
         ) : (
           <div className="fade-in-0 relative z-[0] flex max-h-full flex-1 animate-in flex-col overflow-hidden">
-            <ScrollShadow
-              className="flex-1"
-              scrollableClassName="max-h-full"
-              shadowColor="hsl(var(--background))"
-              shadowClassName="z-[1]"
-            >
-              <Chats
-                messages={messages}
-                isChatStreaming={isChatStreaming}
-                authToken={props.authToken}
-                sessionId={sessionId}
-                className="min-w-0 pt-10 pb-32"
-                twAccount={props.account}
-                client={client}
-              />
-              {/* Scroll anchor */}
-              <div ref={messagesEndRef} />
-            </ScrollShadow>
-
-            <Chatbar
-              sendMessage={handleSendMessage}
-              config={config}
+            <Chats
+              messages={messages}
               isChatStreaming={isChatStreaming}
-              updateConfig={() => {
-                updateConfig.mutate(config);
-              }}
-              abortChatStream={() => {
-                chatAbortController?.abort();
-                setChatAbortController(undefined);
-                setIsChatStreaming(false);
-                // if last message is presence, remove it
-                if (messages[messages.length - 1]?.type === "presence") {
-                  setMessages((prev) => prev.slice(0, -1));
-                }
-              }}
+              authToken={props.authToken}
+              sessionId={sessionId}
+              className="min-w-0 pt-6 pb-32"
+              twAccount={props.account}
+              client={client}
+              enableAutoScroll={enableAutoScroll}
+              setEnableAutoScroll={setEnableAutoScroll}
             />
+
+            <div className="container max-w-[800px]">
+              <ChatBar
+                sendMessage={handleSendMessage}
+                isChatStreaming={isChatStreaming}
+                abortChatStream={() => {
+                  chatAbortController?.abort();
+                  setChatAbortController(undefined);
+                  setIsChatStreaming(false);
+                  // if last message is presence, remove it
+                  if (messages[messages.length - 1]?.type === "presence") {
+                    setMessages((prev) => prev.slice(0, -1));
+                  }
+                }}
+              />
+            </div>
           </div>
         )}
 
@@ -367,5 +427,37 @@ export function ChatPageContent(props: {
         </p>
       </div>
     </div>
+  );
+}
+
+function WalletDisconnectedDialog(props: {
+  open: boolean;
+  onOpenChange: (value: boolean) => void;
+}) {
+  return (
+    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
+      <DialogContent className="p-0">
+        <div className="p-6">
+          <DialogHeader>
+            <DialogTitle> Wallet Disconnected </DialogTitle>
+            <DialogDescription>
+              Connect your wallet to continue
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+
+        <div className="flex justify-end gap-3 border-t bg-muted/50 p-6">
+          <DialogClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DialogClose>
+          <Button asChild>
+            <Link href="/login" className="gap-2">
+              Connect Wallet
+              <ArrowRightIcon className="size-4" />
+            </Link>
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

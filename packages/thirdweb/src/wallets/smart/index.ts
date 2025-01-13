@@ -69,28 +69,26 @@ export function isSmartWallet(
 }
 
 /**
- * We can get the personal account for given smart account but not the other way around - this map gives us the reverse lookup
+ * For in-app wallets, the smart wallet creation is implicit so we track these to be able to retrieve the personal account for a smart account on the wallet API.
+ * Note: We have to go account to account here and NOT wallet to account because the smart wallet itself is never exposed to the in-app wallet, only the account.
  * @internal
  */
-const personalAccountToSmartAccountMap = new WeakMap<
-  Account,
-  Wallet<"smart">
->();
-
-const smartWalletToPersonalAccountMap = new WeakMap<Wallet<"smart">, Account>();
+const adminAccountToSmartAccountMap = new WeakMap<Account, Account>();
+const smartAccountToAdminAccountMap = new WeakMap<Account, Account>();
 
 /**
  * @internal
  */
-export async function connectSmartWallet(
-  wallet: Wallet<"smart">,
+export async function connectSmartAccount(
   connectionOptions: SmartWalletConnectionOptions,
   creationOptions: SmartWalletOptions,
 ): Promise<[Account, Chain]> {
   const { personalAccount, client, chain: connectChain } = connectionOptions;
 
   if (!personalAccount) {
-    throw new Error("Personal wallet does not have an account");
+    throw new Error(
+      "No personal account provided for smart account connection",
+    );
   }
 
   const options = creationOptions;
@@ -177,8 +175,8 @@ export async function connectSmartWallet(
     client,
   });
 
-  personalAccountToSmartAccountMap.set(personalAccount, wallet);
-  smartWalletToPersonalAccountMap.set(wallet, personalAccount);
+  adminAccountToSmartAccountMap.set(personalAccount, account);
+  smartAccountToAdminAccountMap.set(account, personalAccount);
 
   return [account, chain] as const;
 }
@@ -186,15 +184,13 @@ export async function connectSmartWallet(
 /**
  * @internal
  */
-export async function disconnectSmartWallet(
-  wallet: Wallet<"smart">,
-): Promise<void> {
+export async function disconnectSmartAccount(account: Account): Promise<void> {
   // look up the personalAccount for the smart wallet
-  const personalAccount = smartWalletToPersonalAccountMap.get(wallet);
+  const personalAccount = smartAccountToAdminAccountMap.get(account);
   if (personalAccount) {
     // remove the mappings
-    personalAccountToSmartAccountMap.delete(personalAccount);
-    smartWalletToPersonalAccountMap.delete(wallet);
+    adminAccountToSmartAccountMap.delete(personalAccount);
+    smartAccountToAdminAccountMap.delete(account);
   }
 }
 
@@ -214,7 +210,7 @@ async function createSmartAccount(
     }
   }
 
-  const { accountContract } = options;
+  let accountContract = options.accountContract;
   const account: Account = {
     address: getAddress(accountContract.address),
     async sendTransaction(transaction: SendTransactionOption) {
@@ -240,8 +236,18 @@ async function createSmartAccount(
       } else {
         paymasterOverride = options.overrides?.paymaster;
       }
+
+      // If this transaction is for a different chain than the initial one, get the account contract for that chain
+      if (transaction.chainId !== accountContract.chain.id) {
+        accountContract = getContract({
+          address: account.address,
+          chain: getCachedChain(transaction.chainId),
+          client: options.client,
+        });
+      }
+
       const executeTx = prepareExecute({
-        accountContract,
+        accountContract: accountContract,
         transaction,
         executeOverride: options.overrides?.execute,
       });
@@ -249,6 +255,8 @@ async function createSmartAccount(
         executeTx,
         options: {
           ...options,
+          chain: getCachedChain(transaction.chainId),
+          accountContract,
           overrides: {
             ...options.overrides,
             paymaster: paymasterOverride,
@@ -264,7 +272,11 @@ async function createSmartAccount(
       });
       return _sendUserOp({
         executeTx,
-        options,
+        options: {
+          ...options,
+          chain: getCachedChain(transactions[0]?.chainId ?? options.chain.id),
+          accountContract,
+        },
       });
     },
     async signMessage({ message }: { message: SignableMessage }) {
@@ -277,8 +289,8 @@ async function createSmartAccount(
         });
       }
 
-      const { deployAndSignMessage } = await import("./lib/signing.js");
-      return deployAndSignMessage({
+      const { smartAccountSignMessage } = await import("./lib/signing.js");
+      return smartAccountSignMessage({
         accountContract,
         factoryContract: options.factoryContract,
         options,
@@ -298,8 +310,8 @@ async function createSmartAccount(
         });
       }
 
-      const { deployAndSignTypedData } = await import("./lib/signing.js");
-      return deployAndSignTypedData({
+      const { smartAccountSignTypedData } = await import("./lib/signing.js");
+      return smartAccountSignTypedData({
         accountContract,
         factoryContract: options.factoryContract,
         options,
@@ -451,45 +463,47 @@ async function _sendUserOp(args: {
   options: SmartAccountOptions;
 }): Promise<WaitForReceiptOptions> {
   const { executeTx, options } = args;
-  const unsignedUserOp = await createUnsignedUserOp({
-    transaction: executeTx,
-    factoryContract: options.factoryContract,
-    accountContract: options.accountContract,
-    adminAddress: options.personalAccount.address,
-    sponsorGas: options.sponsorGas,
-    overrides: options.overrides,
-  });
-  const signedUserOp = await signUserOp({
-    client: options.client,
-    chain: options.chain,
-    adminAccount: options.personalAccount,
-    entrypointAddress: options.overrides?.entrypointAddress,
-    userOp: unsignedUserOp,
-  });
-  const bundlerOptions: BundlerOptions = {
-    chain: options.chain,
-    client: options.client,
-    bundlerUrl: options.overrides?.bundlerUrl,
-    entrypointAddress: options.overrides?.entrypointAddress,
-  };
-  const userOpHash = await bundleUserOp({
-    options: bundlerOptions,
-    userOp: signedUserOp,
-  });
-  // wait for tx receipt rather than return the userOp hash
-  const receipt = await waitForUserOpReceipt({
-    ...bundlerOptions,
-    userOpHash,
-  });
+  try {
+    const unsignedUserOp = await createUnsignedUserOp({
+      transaction: executeTx,
+      factoryContract: options.factoryContract,
+      accountContract: options.accountContract,
+      adminAddress: options.personalAccount.address,
+      sponsorGas: options.sponsorGas,
+      overrides: options.overrides,
+    });
+    const signedUserOp = await signUserOp({
+      client: options.client,
+      chain: options.chain,
+      adminAccount: options.personalAccount,
+      entrypointAddress: options.overrides?.entrypointAddress,
+      userOp: unsignedUserOp,
+    });
+    const bundlerOptions: BundlerOptions = {
+      chain: options.chain,
+      client: options.client,
+      bundlerUrl: options.overrides?.bundlerUrl,
+      entrypointAddress: options.overrides?.entrypointAddress,
+    };
+    const userOpHash = await bundleUserOp({
+      options: bundlerOptions,
+      userOp: signedUserOp,
+    });
+    // wait for tx receipt rather than return the userOp hash
+    const receipt = await waitForUserOpReceipt({
+      ...bundlerOptions,
+      userOpHash,
+    });
 
-  // reset the isDeploying flag after every transaction
-  clearAccountDeploying(options.accountContract);
-
-  return {
-    client: options.client,
-    chain: options.chain,
-    transactionHash: receipt.transactionHash,
-  };
+    return {
+      client: options.client,
+      chain: options.chain,
+      transactionHash: receipt.transactionHash,
+    };
+  } finally {
+    // reset the isDeploying flag after every transaction or error
+    clearAccountDeploying(options.accountContract);
+  }
 }
 
 async function getEntrypointFromFactory(

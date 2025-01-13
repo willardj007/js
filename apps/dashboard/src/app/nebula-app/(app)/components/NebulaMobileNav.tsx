@@ -32,7 +32,7 @@ export function MobileNav(props: {
             onClick={() => setIsOpen(!isOpen)}
             className="h-auto w-auto p-0.5"
           >
-            <MenuIcon className="size-6" />
+            <MenuIcon className="size-8" />
           </Button>
         </SheetTrigger>
         <SheetContent
@@ -61,11 +61,7 @@ export function MobileNav(props: {
       </Sheet>
 
       <div className="flex items-center gap-5">
-        <Button
-          asChild
-          variant="primary"
-          className="h-auto w-auto rounded-lg px-2.5 py-1.5"
-        >
+        <Button asChild className="h-auto w-auto rounded-lg px-2.5 py-1.5">
           <Link href={newChatPage}>New Chat</Link>
         </Button>
       </div>

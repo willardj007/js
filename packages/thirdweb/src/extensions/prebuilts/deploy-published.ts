@@ -218,8 +218,10 @@ export async function deployContractfromDeployMetadata(
             (await getAllDefaultConstructorParamsForImplementation({
               chain,
               client,
+              contractId: deployMetadata.name,
             })),
           publisher: deployMetadata.publisher,
+          version: deployMetadata.version,
         });
 
       // TODO: remove this once the modified version of TWCloneFactory

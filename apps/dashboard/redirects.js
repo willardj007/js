@@ -325,6 +325,18 @@ async function redirects() {
       destination: "/bounties",
       permanent: false,
     },
+    // redirect /template/<slug> to /templates/<slug>
+    {
+      source: "/template/:slug",
+      destination: "/templates/:slug",
+      permanent: false,
+    },
+    // PREVIOUS CAMPAIGNS
+    {
+      source: "/unlimited-wallets",
+      destination: "/",
+      permanent: false,
+    },
     ...legacyDashboardToTeamRedirects,
   ];
 }

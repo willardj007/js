@@ -1,11 +1,12 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { TrackedLinkTW } from "@/components/ui/tracked-link";
+import { isAfter } from "date-fns";
 import { useLocalStorage } from "hooks/useLocalStorage";
 import { ChevronRightIcon, XIcon } from "lucide-react";
 import { useSelectedLayoutSegment } from "next/navigation";
 
-function AnnouncementBanner(props: {
+export function AnnouncementBanner(props: {
   href: string;
   label: string;
   trackingLabel: string;
@@ -15,6 +16,7 @@ function AnnouncementBanner(props: {
     useLocalStorage(`dismissed-${props.trackingLabel}`, false, true);
 
   if (
+    layoutSegment === "/_not-found" ||
     hasDismissedAnnouncement ||
     layoutSegment === "login" ||
     layoutSegment === "nebula-app"
@@ -57,6 +59,13 @@ function AnnouncementBanner(props: {
 }
 
 export function UnlimitedWalletsBanner() {
+  // hide banner after 31st December 2024
+  const shouldHideBanner = isAfter(new Date(), new Date("31 Dec 2024"));
+
+  if (shouldHideBanner) {
+    return null;
+  }
+
   return (
     <AnnouncementBanner
       href="/team/~/~/settings/billing?coupon=FREEWALLETS24"

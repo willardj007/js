@@ -48,6 +48,7 @@ import {
   encodeAbiParameters,
   padHex,
 } from "thirdweb/utils";
+import { isZkSyncChain } from "thirdweb/utils";
 import { FormHelperText, FormLabel, Heading, Text } from "tw-components";
 import { useCustomFactoryAbi, useFunctionParamsFromABI } from "../hooks";
 import { addContractToMultiChainRegistry } from "../utils";
@@ -61,7 +62,7 @@ import {
 import {
   ModularContractDefaultModulesFieldset,
   getModuleInstallParams,
-  showPrimarySaleFiedset,
+  showPrimarySaleFieldset,
   showRoyaltyFieldset,
 } from "./modular-contract-default-modules-fieldset";
 import { Param } from "./param";
@@ -282,7 +283,7 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
                 }
 
                 // set connected wallet address as default "primarySaleRecipient"
-                else if (showPrimarySaleFiedset(paramNames)) {
+                else if (showPrimarySaleFieldset(paramNames)) {
                   returnVal.primarySaleRecipient = activeAccount.address;
                 }
 
@@ -387,8 +388,8 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
       Object.keys(formDeployParams)
         .map((paramKey) => {
           const deployParam = deployParams.find((p) => p.name === paramKey);
-          const contructorParams = metadata?.constructorParams || {};
-          const extraMetadataParam = contructorParams[paramKey];
+          const constructorParams = metadata?.constructorParams || {};
+          const extraMetadataParam = constructorParams[paramKey];
 
           if (
             shouldHide(paramKey) ||
@@ -444,7 +445,10 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
         }
       }
 
-      if (metadata.name === "MarketplaceV3") {
+      if (
+        metadata.name === "MarketplaceV3" &&
+        !(await isZkSyncChain(walletChain))
+      ) {
         // special case for marketplace
         return await deployMarketplaceContract({
           account: activeAccount,
@@ -461,6 +465,7 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
               ? JSON.parse(params.deployParams._trustedForwarders as string)
               : undefined,
           },
+          version: metadata.version,
         });
       }
 
@@ -800,9 +805,9 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
                         (p) => p.name === paramKey,
                       );
 
-                      const contructorParams =
+                      const constructorParams =
                         metadata?.constructorParams || {};
-                      const extraMetadataParam = contructorParams[paramKey];
+                      const extraMetadataParam = constructorParams[paramKey];
 
                       return (
                         <Param
@@ -826,9 +831,9 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
                         (p) => p.name === paramKey,
                       );
 
-                      const contructorParams =
+                      const constructorParams =
                         metadata?.constructorParams || {};
-                      const extraMetadataParam = contructorParams[paramKey];
+                      const extraMetadataParam = constructorParams[paramKey];
 
                       return (
                         <Param
@@ -859,8 +864,8 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
                   const deployParam = deployParams.find(
                     (p) => p.name === paramKey,
                   );
-                  const contructorParams = metadata?.constructorParams || {};
-                  const extraMetadataParam = contructorParams[paramKey];
+                  const constructorParams = metadata?.constructorParams || {};
+                  const extraMetadataParam = constructorParams[paramKey];
 
                   if (
                     shouldHide(paramKey) ||
@@ -986,8 +991,8 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
                         <CircleAlertIcon className="size-5" />
                         <AlertTitle>
                           Deterministic deployment would only result in the same
-                          contract address if you use the same contructor params
-                          on every deployment.
+                          contract address if you use the same constructor
+                          params on every deployment.
                         </AlertTitle>
                       </Alert>
                     )}
@@ -1050,7 +1055,7 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
                 </span>
               </CheckboxWithLabel>
 
-              {/* Depoy */}
+              {/* Deploy */}
               <div className="flex md:justify-end">
                 <Button
                   disabled={!activeAccount || !walletChain}

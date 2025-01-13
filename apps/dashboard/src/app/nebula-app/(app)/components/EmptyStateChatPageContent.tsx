@@ -2,14 +2,11 @@
 
 import { ArrowUpRightIcon } from "lucide-react";
 import { Button } from "../../../../@/components/ui/button";
-import type { ExecuteConfig } from "../api/types";
 import { NebulaIcon } from "../icons/NebulaIcon";
-import { Chatbar } from "./ChatBar";
+import { ChatBar } from "./ChatBar";
 
 export function EmptyStateChatPageContent(props: {
-  updateConfig: (config: ExecuteConfig) => void;
   sendMessage: (message: string) => void;
-  config: ExecuteConfig;
 }) {
   return (
     <div className="py-16">
@@ -23,17 +20,15 @@ export function EmptyStateChatPageContent(props: {
           </div>
         </div>
         <div className="h-5" />
-        <h1 className="text-center font-semibold text-4xl tracking-tight">
+        <h1 className="px-4 text-center font-semibold text-3xl tracking-tight md:text-4xl">
           How can I help you <br className="max-sm:hidden" />
           with the blockchain today?
         </h1>
         <div className="h-5" />
         <div className="mx-auto max-w-[600px]">
-          <Chatbar
+          <ChatBar
             sendMessage={props.sendMessage}
-            config={props.config}
             isChatStreaming={false}
-            updateConfig={props.updateConfig}
             abortChatStream={() => {
               // the page will switch so, no need to handle abort here
             }}

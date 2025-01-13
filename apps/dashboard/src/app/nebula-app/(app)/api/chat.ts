@@ -1,18 +1,19 @@
 import { NEXT_PUBLIC_NEBULA_URL } from "@/constants/env";
 // TODO - copy the source of this library to dashboard
 import { stream } from "fetch-event-stream";
-import type { SendTransactionOption } from "thirdweb/dist/types/wallets/interfaces/wallet";
+import type { NebulaTxData } from "../components/Chats";
 import type { ExecuteConfig } from "./types";
 
 export type ContextFilters = {
   chainIds?: string[];
   contractAddresses?: string[];
+  walletAddresses?: string[];
 };
 
 export async function promptNebula(params: {
   message: string;
   sessionId: string;
-  config: ExecuteConfig;
+  config: ExecuteConfig | null;
   authToken: string;
   handleStream: (res: ChatStreamedResponse) => void;
   abortController: AbortController;
@@ -23,14 +24,18 @@ export async function promptNebula(params: {
     user_id: "default-user",
     session_id: params.sessionId,
     stream: true,
-    execute_config: params.config,
   };
 
   if (params.contextFilters) {
     body.context_filter = {
       chain_ids: params.contextFilters.chainIds || [],
       contract_addresses: params.contextFilters.contractAddresses || [],
+      wallet_addresses: params.contextFilters.walletAddresses || [],
     };
+  }
+
+  if (params.config) {
+    body.execute_config = params.config;
   }
 
   const events = await stream(`${NEXT_PUBLIC_NEBULA_URL}/chat`, {
@@ -139,7 +144,7 @@ type ChatStreamedResponse =
   | {
       event: "action";
       type: "sign_transaction" & (string & {});
-      data: SendTransactionOption;
+      data: NebulaTxData;
     };
 
 type ChatStreamedEvent =
