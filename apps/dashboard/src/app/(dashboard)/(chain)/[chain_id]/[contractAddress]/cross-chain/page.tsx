@@ -2,7 +2,11 @@ import { fetchPublishedContractsFromDeploy } from "components/contract-component
 import { notFound, redirect } from "next/navigation";
 import { getContractEvents, prepareEvent } from "thirdweb";
 import { defineChain, getChainMetadata, localhost } from "thirdweb/chains";
-import { type FetchDeployMetadataResult, getContract } from "thirdweb/contract";
+import {
+  type FetchDeployMetadataResult,
+  getContract,
+  getDeployedCloneFactoryContract,
+} from "thirdweb/contract";
 import { getInstalledModules } from "thirdweb/modules";
 import { eth_getCode, getRpcClient } from "thirdweb/rpc";
 import { getContractPageParamsInfo } from "../_utils/getContractFromParams";
@@ -114,11 +118,14 @@ export default async function Page(props: {
       "event ProxyDeployed(address indexed implementation, address proxy, address indexed deployer, bytes data)",
   });
 
-  const twCloneFactoryContract = getContract({
-    address: "0xB83db4b940e4796aA1f53DBFC824B9B1865835D5",
+  const twCloneFactoryContract = await getDeployedCloneFactoryContract({
     chain: contract.chain,
     client: contract.client,
   });
+
+  if (!twCloneFactoryContract) {
+    throw new Error("Factory not found");
+  }
 
   const events = await getContractEvents({
     contract: twCloneFactoryContract,

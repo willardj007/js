@@ -231,6 +231,7 @@ export async function deployContractfromDeployMetadata(
           implementationAddress: implementationContract.address,
           initializeData,
           salt,
+          isCrosschain,
         });
       }
 
