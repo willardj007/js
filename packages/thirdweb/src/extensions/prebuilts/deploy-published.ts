@@ -149,7 +149,6 @@ export async function deployContractfromDeployMetadata(
     initializeParams,
     initializeData,
     deployMetadata,
-    isSuperchainInterop, // TODO: Remove this once the updated Clone Factory has been published
     isCrosschain,
     implementationConstructorParams,
     modules,
@@ -223,20 +222,12 @@ export async function deployContractfromDeployMetadata(
           version: deployMetadata.version,
         });
 
-      // TODO: remove this once the modified version of TWCloneFactory
-      // has been published under the thirdweb wallet
-      const modifiedCloneFactoryContract = getContract({
-        client,
-        address: "0xB83db4b940e4796aA1f53DBFC824B9B1865835D5", // only deployed on OP and zora testnets
-        chain,
-      });
-
       if (isCrosschain) {
         return deployViaAutoFactory({
           client,
           chain,
           account,
-          cloneFactoryContract: modifiedCloneFactoryContract,
+          cloneFactoryContract,
           implementationAddress: implementationContract.address,
           initializeData,
           salt,
@@ -256,9 +247,7 @@ export async function deployContractfromDeployMetadata(
         client,
         chain,
         account,
-        cloneFactoryContract: isSuperchainInterop // TODO: remove this once the updated clone factory is publsihed
-          ? modifiedCloneFactoryContract
-          : cloneFactoryContract,
+        cloneFactoryContract,
         initializeTransaction,
         salt,
       });
