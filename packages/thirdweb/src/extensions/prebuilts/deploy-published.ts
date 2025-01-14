@@ -2,7 +2,6 @@ import type { AbiFunction } from "abitype";
 import type { Chain } from "../../chains/types.js";
 import type { ThirdwebClient } from "../../client/client.js";
 import { type ThirdwebContract, getContract } from "../../contract/contract.js";
-import { deployViaAutoFactoryWithImplementationParams } from "../../contract/deployment/deploy-via-autofactory.js";
 import { fetchPublishedContractMetadata } from "../../contract/deployment/publisher.js";
 import { getOrDeployInfraContractFromMetadata } from "../../contract/deployment/utils/bootstrap.js";
 import { sendAndConfirmTransaction } from "../../transaction/actions/send-and-confirm-transaction.js";
@@ -233,7 +232,7 @@ export async function deployContractfromDeployMetadata(
       });
 
       if (isCrosschain) {
-        return await deployViaAutoFactoryWithImplementationParams({
+        return deployViaAutoFactory({
           client,
           chain,
           account,
@@ -242,27 +241,27 @@ export async function deployContractfromDeployMetadata(
           initializeData,
           salt,
         });
-      } else {
-        const initializeTransaction = await getInitializeTransaction({
-          client,
-          chain,
-          deployMetadata,
-          implementationContract,
-          initializeParams,
-          account,
-          modules,
-        });
-        return deployViaAutoFactory({
-          client,
-          chain,
-          account,
-          cloneFactoryContract: isSuperchainInterop // TODO: remove this once the updated clone factory is publsihed
-            ? modifiedCloneFactoryContract
-            : cloneFactoryContract,
-          initializeTransaction,
-          salt,
-        });
       }
+
+      const initializeTransaction = await getInitializeTransaction({
+        client,
+        chain,
+        deployMetadata,
+        implementationContract,
+        initializeParams: processedInitializeParams,
+        account,
+        modules,
+      });
+      return deployViaAutoFactory({
+        client,
+        chain,
+        account,
+        cloneFactoryContract: isSuperchainInterop // TODO: remove this once the updated clone factory is publsihed
+          ? modifiedCloneFactoryContract
+          : cloneFactoryContract,
+        initializeTransaction,
+        salt,
+      });
     }
     case "customFactory": {
       if (!deployMetadata?.factoryDeploymentData?.customFactoryInput) {

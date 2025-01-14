@@ -26,7 +26,10 @@ import { zkDeployProxy } from "./zksync/zkDeployProxy.js";
 export function prepareAutoFactoryDeployTransaction(
   args: ClientAndChain & {
     cloneFactoryContract: ThirdwebContract;
-    initializeTransaction: PreparedTransaction;
+    initializeTransaction?: PreparedTransaction;
+    initializeData?: `0x${string}`;
+    implementationAddress?: string;
+    isCrosschain?: boolean;
     salt?: string;
   },
 ) {
@@ -44,6 +47,25 @@ export function prepareAutoFactoryDeployTransaction(
         : toHex(blockNumber, {
             size: 32,
           });
+
+      if (args.isCrosschain) {
+        if (!args.initializeData || !args.implementationAddress) {
+          throw new Error(
+            "initializeData or implementationAddress can't be undefined",
+          );
+        }
+
+        return {
+          data: args.initializeData,
+          implementation: args.implementationAddress,
+          salt,
+        } as const;
+      }
+
+      if (!args.initializeTransaction) {
+        throw new Error("initializeTransaction can't be undefined");
+      }
+
       const implementation = await resolvePromisedValue(
         args.initializeTransaction.to,
       );
@@ -65,7 +87,10 @@ export function prepareAutoFactoryDeployTransaction(
 export async function deployViaAutoFactory(
   options: ClientAndChainAndAccount & {
     cloneFactoryContract: ThirdwebContract;
-    initializeTransaction: PreparedTransaction;
+    initializeTransaction?: PreparedTransaction;
+    initializeData?: `0x${string}`;
+    implementationAddress?: string;
+    isCrosschain?: boolean;
     salt?: string;
   },
 ): Promise<string> {
@@ -75,10 +100,16 @@ export async function deployViaAutoFactory(
     account,
     cloneFactoryContract,
     initializeTransaction,
+    initializeData,
+    implementationAddress,
+    isCrosschain,
     salt,
   } = options;
 
   if (await isZkSyncChain(chain)) {
+    if (!initializeTransaction) {
+      throw new Error("initializeTransaction can't be undefined");
+    }
     return zkDeployProxy({
       chain,
       client,
@@ -94,6 +125,9 @@ export async function deployViaAutoFactory(
     client,
     cloneFactoryContract,
     initializeTransaction,
+    initializeData,
+    implementationAddress,
+    isCrosschain,
     salt,
   });
   const receipt = await sendAndConfirmTransaction({
@@ -107,62 +141,6 @@ export async function deployViaAutoFactory(
     : proxyDeployedEvent();
   const decodedEvent = parseEventLogs({
     events: [proxyEvent],
-    logs: receipt.logs,
-  });
-  if (decodedEvent.length === 0 || !decodedEvent[0]) {
-    throw new Error(
-      `No ProxyDeployed event found in transaction: ${receipt.transactionHash}`,
-    );
-  }
-  return decodedEvent[0]?.args.proxy;
-}
-
-/**
- * @internal
- */
-export async function deployViaAutoFactoryWithImplementationParams(
-  options: ClientAndChainAndAccount & {
-    cloneFactoryContract: ThirdwebContract;
-    initializeData?: `0x${string}`;
-    implementationAddress: string;
-    salt?: string;
-  },
-): Promise<string> {
-  const {
-    client,
-    chain,
-    account,
-    cloneFactoryContract,
-    initializeData,
-    implementationAddress,
-    salt,
-  } = options;
-
-  const rpcRequest = getRpcClient({
-    client,
-    chain,
-  });
-  const blockNumber = await eth_blockNumber(rpcRequest);
-  const parsedSalt = salt
-    ? salt.startsWith("0x") && salt.length === 66
-      ? (salt as `0x${string}`)
-      : keccakId(salt)
-    : toHex(blockNumber, {
-        size: 32,
-      });
-
-  const tx = deployProxyByImplementation({
-    contract: cloneFactoryContract,
-    data: initializeData || "0x",
-    implementation: implementationAddress,
-    salt: parsedSalt,
-  });
-  const receipt = await sendAndConfirmTransaction({
-    transaction: tx,
-    account,
-  });
-  const decodedEvent = parseEventLogs({
-    events: [modifiedProxyDeployedEvent()],
     logs: receipt.logs,
   });
   if (decodedEvent.length === 0 || !decodedEvent[0]) {
