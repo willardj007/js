@@ -36,7 +36,7 @@ import {
 } from "components/contract-components/contract-deploy-form/deploy-context-modal";
 import {
   getModuleInstallParams,
-  showPrimarySaleFiedset,
+  showPrimarySaleFieldset,
   showRoyaltyFieldset,
   showSuperchainBridgeFieldset,
 } from "components/contract-components/contract-deploy-form/modular-contract-default-modules-fieldset";
@@ -320,7 +320,7 @@ export function DataTable({
             }
 
             // set connected wallet address as default "primarySaleRecipient"
-            else if (showPrimarySaleFiedset(paramNames)) {
+            else if (showPrimarySaleFieldset(paramNames)) {
               returnVal.primarySaleRecipient = owner || "";
             }
 
