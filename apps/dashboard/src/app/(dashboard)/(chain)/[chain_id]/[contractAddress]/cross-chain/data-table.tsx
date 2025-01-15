@@ -99,12 +99,14 @@ export function DataTable({
   coreContract,
   modulesMetadata,
   initializeData,
+  inputSalt,
 }: {
   data: CrossChain[];
   coreMetadata: FetchDeployMetadataResult;
   coreContract: ThirdwebContract;
-  modulesMetadata: FetchDeployMetadataResult[];
+  modulesMetadata?: FetchDeployMetadataResult[];
   initializeData?: `0x${string}`;
+  inputSalt?: `0x${string}`;
 }) {
   const activeAccount = useActiveAccount();
   const switchChain = useSwitchActiveWalletChain();
@@ -263,7 +265,9 @@ export function DataTable({
       // eslint-disable-next-line no-restricted-syntax
       const chain = defineChain(chainId);
       const client = getThirdwebClient();
-      const salt = concatHex(["0x0101", padHex("0x", { size: 30 })]).toString();
+      const salt =
+        inputSalt ||
+        concatHex(["0x0101", padHex("0x", { size: 30 })]).toString();
 
       await switchChain(chain);
 
@@ -286,18 +290,18 @@ export function DataTable({
         chain,
         client,
         deployMetadata: coreMetadata,
-        isCrosschain,
+        isCrosschain: true,
         initializeData,
         salt,
       });
 
-      await verifyContract({
+      verifyContract({
         address: crosschainContractAddress,
         chain,
         client,
       });
 
-      if (isCrosschain) {
+      if (isCrosschain && modulesMetadata) {
         const owner = await readContract({
           contract: coreContract,
           method: "function owner() view returns (address)",

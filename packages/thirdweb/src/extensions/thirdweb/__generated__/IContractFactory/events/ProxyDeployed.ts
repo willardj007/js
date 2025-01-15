@@ -1,5 +1,5 @@
-import { prepareEvent } from "../../../../../event/prepare-event.js";
 import type { AbiParameterToPrimitiveType } from "abitype";
+import { prepareEvent } from "../../../../../event/prepare-event.js";
 
 /**
  * Represents the filters for the "ProxyDeployed" event.
@@ -46,12 +46,13 @@ export function proxyDeployedEvent(filters: ProxyDeployedEventFilters = {}) {
   });
 }
 
-
 // TODO: remove this once the modified version of TWCloneFactory has been published
-export function modifiedProxyDeployedEvent(filters: ProxyDeployedEventFilters = {}) {
+export function modifiedProxyDeployedEvent(
+  filters: ProxyDeployedEventFilters = {},
+) {
   return prepareEvent({
     signature:
-      "event ProxyDeployed(address indexed implementation, address proxy, address indexed deployer, bytes data)",
+      "event ProxyDeployed(address indexed implementation, address indexed proxy, address indexed deployer, bytes32 inputSalt, bytes data)",
     filters,
   });
 }

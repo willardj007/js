@@ -1,5 +1,5 @@
 import { fetchPublishedContractsFromDeploy } from "components/contract-components/fetchPublishedContractsFromDeploy";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { getContractEvents, prepareEvent } from "thirdweb";
 import { defineChain, getChainMetadata, localhost } from "thirdweb/chains";
 import {
@@ -41,10 +41,6 @@ export default async function Page(props: {
   }
 
   const { isModularCore } = await getContractPageMetadata(contract);
-
-  if (!isModularCore) {
-    redirect(`/${params.chain_id}/${params.contractAddress}`);
-  }
 
   const originalCode = await eth_getCode(
     getRpcClient({
@@ -90,32 +86,37 @@ export default async function Page(props: {
     }),
   );
 
-  const modules = await getInstalledModules({ contract });
-
   const coreMetadata = (
     await fetchPublishedContractsFromDeploy({
       contract,
       client: contract.client,
     })
   ).at(-1) as FetchDeployMetadataResult;
-  const modulesMetadata = (await Promise.all(
-    modules.map(async (m) =>
-      (
-        await fetchPublishedContractsFromDeploy({
-          contract: getContract({
-            chain: contract.chain,
+
+  let modulesMetadata: FetchDeployMetadataResult[] | undefined;
+
+  if (isModularCore) {
+    const modules = await getInstalledModules({ contract });
+
+    modulesMetadata = (await Promise.all(
+      modules.map(async (m) =>
+        (
+          await fetchPublishedContractsFromDeploy({
+            contract: getContract({
+              chain: contract.chain,
+              client: contract.client,
+              address: m.implementation,
+            }),
             client: contract.client,
-            address: m.implementation,
-          }),
-          client: contract.client,
-        })
-      ).at(-1),
-    ),
-  )) as FetchDeployMetadataResult[];
+          })
+        ).at(-1),
+      ),
+    )) as FetchDeployMetadataResult[];
+  }
 
   const ProxyDeployedEvent = prepareEvent({
     signature:
-      "event ProxyDeployed(address indexed implementation, address proxy, address indexed deployer, bytes data)",
+      "event ProxyDeployed(address indexed implementation, address indexed proxy, address indexed deployer, bytes32 inputSalt, bytes data)",
   });
 
   const twCloneFactoryContract = await getDeployedCloneFactoryContract({
@@ -139,6 +140,7 @@ export default async function Page(props: {
       coreMetadata={coreMetadata}
       modulesMetadata={modulesMetadata}
       initializeData={event?.args.data}
+      inputSalt={event?.args.inputSalt}
       data={chainsDeployedOn}
       coreContract={contract}
     />

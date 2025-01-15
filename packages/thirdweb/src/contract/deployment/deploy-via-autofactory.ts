@@ -44,9 +44,9 @@ export function prepareAutoFactoryDeployTransaction(
         ? args.salt.startsWith("0x") && args.salt.length === 66
           ? (args.salt as `0x${string}`)
           : keccakId(args.salt)
-        : toHex(blockNumber, {
-            size: 32,
-          });
+        : (`0x0101${toHex(blockNumber, {
+            size: 30,
+          }).replace(/^0x/, "")}` as `0x${string}`);
 
       if (args.isCrosschain) {
         if (!args.initializeData || !args.implementationAddress) {
