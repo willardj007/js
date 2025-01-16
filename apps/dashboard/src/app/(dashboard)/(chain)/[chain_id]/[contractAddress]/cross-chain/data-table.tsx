@@ -34,42 +34,29 @@ import {
   DeployStatusModal,
   useDeployStatusModal,
 } from "components/contract-components/contract-deploy-form/deploy-context-modal";
-import {
-  getModuleInstallParams,
-  showPrimarySaleFieldset,
-  showRoyaltyFieldset,
-  showSuperchainBridgeFieldset,
-} from "components/contract-components/contract-deploy-form/modular-contract-default-modules-fieldset";
+import {} from "components/contract-components/contract-deploy-form/modular-contract-default-modules-fieldset";
 import { useTxNotifications } from "hooks/useTxNotifications";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import {
-  ZERO_ADDRESS,
   defineChain,
   eth_getCode,
-  eth_getTransactionCount,
   getContract,
   getRpcClient,
   prepareContractCall,
   prepareTransaction,
-  readContract,
   sendAndConfirmTransaction,
-  sendTransaction,
-  waitForReceipt,
 } from "thirdweb";
 import type {
   FetchDeployMetadataResult,
   ThirdwebContract,
 } from "thirdweb/contract";
-import { deployContractfromDeployMetadata } from "thirdweb/deploys";
-import { installPublishedModule } from "thirdweb/modules";
-import { useActiveAccount, useSwitchActiveWalletChain } from "thirdweb/react";
 import {
-  type AbiFunction,
-  concatHex,
-  encodeAbiParameters,
-  padHex,
-} from "thirdweb/utils";
+  deployContractfromDeployMetadata,
+  getOrDeployInfraForPublishedContract,
+} from "thirdweb/deploys";
+import { useActiveAccount, useSwitchActiveWalletChain } from "thirdweb/react";
+import { concatHex, padHex } from "thirdweb/utils";
 import { z } from "zod";
 
 type CrossChain = {
@@ -112,6 +99,7 @@ export function DataTable({
   initializeData,
   inputSalt,
   initCode,
+  isDirectDeploy,
 }: {
   data: CrossChain[];
   coreMetadata: FetchDeployMetadataResult;
@@ -120,6 +108,7 @@ export function DataTable({
   initializeData?: `0x${string}`;
   inputSalt?: `0x${string}`;
   initCode?: `0x${string}`;
+  isDirectDeploy: boolean;
 }) {
   const activeAccount = useActiveAccount();
   const switchChain = useSwitchActiveWalletChain();
@@ -301,7 +290,7 @@ export function DataTable({
       );
 
       let crosschainContractAddress: string | undefined;
-      if (initCode) {
+      if (initCode && isDirectDeploy) {
         const tx = prepareTransaction({
           client,
           chain,
@@ -344,101 +333,14 @@ export function DataTable({
           client,
         });
         if (isCrosschain && modulesMetadata) {
-          const owner = await readContract({
-            contract: coreContract,
-            method: "function owner() view returns (address)",
-            params: [],
-          });
-
-          const moduleInitializeParams = modulesMetadata.reduce(
-            (acc, mod) => {
-              const params = getModuleInstallParams(mod);
-              const paramNames = params
-                .map((param) => param.name)
-                .filter((p) => p !== undefined);
-              const returnVal: Record<string, string> = {};
-
-              // set connected wallet address as default "royaltyRecipient"
-              if (showRoyaltyFieldset(paramNames)) {
-                returnVal.royaltyRecipient = owner || "";
-                returnVal.royaltyBps = "0";
-                returnVal.transferValidator = ZERO_ADDRESS;
-              }
-
-              // set connected wallet address as default "primarySaleRecipient"
-              else if (showPrimarySaleFieldset(paramNames)) {
-                returnVal.primarySaleRecipient = owner || "";
-              }
-
-              // set superchain bridge address
-              else if (showSuperchainBridgeFieldset(paramNames)) {
-                returnVal.superchainBridge =
-                  "0x4200000000000000000000000000000000000028"; // OP Superchain Bridge
-              }
-
-              acc[mod.name] = returnVal;
-              return acc;
-            },
-            {} as Record<string, Record<string, string>>,
-          );
-
-          const moduleDeployData = modulesMetadata.map((m) => ({
-            deployMetadata: m,
-            initializeParams: moduleInitializeParams[m.name],
-          }));
-
-          const contract = getContract({
-            address: crosschainContractAddress,
-            chain,
-            client,
-          });
-
-          const rpcRequest = getRpcClient({
-            client,
-            chain,
-          });
-          const currentNonce = await eth_getTransactionCount(rpcRequest, {
-            address: activeAccount.address,
-          });
-
-          for (const [i, m] of moduleDeployData.entries()) {
-            let moduleData: `0x${string}` | undefined;
-
-            const moduleInstallParams = m.deployMetadata.abi.find(
-              (abiType) =>
-                (abiType as AbiFunction).name === "encodeBytesOnInstall",
-            ) as AbiFunction | undefined;
-
-            if (m.initializeParams && moduleInstallParams) {
-              moduleData = encodeAbiParameters(
-                (
-                  moduleInstallParams.inputs as { name: string; type: string }[]
-                ).map((p) => ({
-                  name: p.name,
-                  type: p.type,
-                })),
-                Object.values(m.initializeParams),
-              );
-            }
-
-            const installTransaction = installPublishedModule({
-              contract,
+          for (const m of modulesMetadata) {
+            await getOrDeployInfraForPublishedContract({
+              chain,
+              client,
               account: activeAccount,
-              moduleName: m.deployMetadata.name,
-              publisher: m.deployMetadata.publisher,
-              version: m.deployMetadata.version,
-              moduleData,
-              nonce: currentNonce + i,
+              contractId: m.name,
+              publisher: m.publisher,
             });
-
-            const txResult = await sendTransaction({
-              transaction: installTransaction,
-              account: activeAccount,
-            });
-
-            await waitForReceipt(txResult);
-            // can't handle parallel transactions, so wait a bit
-            await new Promise((resolve) => setTimeout(resolve, 1000));
           }
         }
       }

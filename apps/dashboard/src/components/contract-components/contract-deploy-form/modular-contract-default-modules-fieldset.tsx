@@ -226,10 +226,6 @@ export function showPrimarySaleFieldset(paramNames: string[]) {
   return paramNames.length === 1 && paramNames.includes("primarySaleRecipient");
 }
 
-export function showSuperchainBridgeFieldset(paramNames: string[]) {
-  return paramNames.length === 1 && paramNames.includes("superchainBridge");
-}
-
 function showSequentialTokenIdFieldset(paramNames: string[]) {
   return paramNames.length === 1 && paramNames.includes("startTokenId");
 }
