@@ -64,9 +64,13 @@ export const EngineImportPage = (props: {
       await importMutation.mutateAsync(data);
       toast.success("Engine imported successfully");
       router.push(`/team/${props.teamSlug}/~/engine`);
-    } catch {
+    } catch (e) {
+      const message = e instanceof Error ? e.message : undefined;
       toast.error(
         "Error importing Engine. Please check if the details are correct.",
+        {
+          description: message,
+        },
       );
     }
   };
@@ -86,7 +90,7 @@ export const EngineImportPage = (props: {
       <div className="h-3" />
 
       <TrackedLinkTW
-        className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/50 p-3 text-sm hover:bg-accent"
+        className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card p-3 text-sm hover:bg-accent"
         href="https://portal.thirdweb.com/infrastructure/engine/get-started"
         target="_blank"
         category="engine"
