@@ -1,14 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Form } from "@/components/ui/form";
 import {
   Table,
   TableBody,
@@ -18,10 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ToolTipLabel } from "@/components/ui/tooltip";
 import { getThirdwebClient } from "@/constants/thirdweb.server";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
 import {
   type ColumnDef,
   flexRender,
@@ -41,9 +32,7 @@ import { useForm } from "react-hook-form";
 import {
   defineChain,
   eth_getCode,
-  getContract,
   getRpcClient,
-  prepareContractCall,
   prepareTransaction,
   sendAndConfirmTransaction,
 } from "thirdweb";
@@ -88,9 +77,6 @@ const formSchema = z.object({
 });
 type FormSchema = z.output<typeof formSchema>;
 
-const positiveIntegerRegex = /^[0-9]\d*$/;
-const superchainBridgeAddress = "0x4200000000000000000000000000000000000028";
-
 export function DataTable({
   data,
   coreMetadata,
@@ -133,51 +119,6 @@ export function DataTable({
     },
   });
 
-  const crossChainTransfer = async (chainId: ChainId) => {
-    if (!activeAccount) {
-      throw new Error("Account not connected");
-    }
-    const amount = form.getValues().amounts[chainId];
-    if (!positiveIntegerRegex.test(amount)) {
-      form.setError(`amounts.${chainId}`, { message: "Invalid Amount" });
-      return;
-    }
-
-    const superChainBridge = getContract({
-      address: superchainBridgeAddress,
-      chain: coreContract.chain,
-      client: coreContract.client,
-    });
-
-    const sendErc20Tx = prepareContractCall({
-      contract: superChainBridge,
-      method:
-        "function sendERC20(address _token, address _to, uint256 _amount, uint256 _chainId)",
-      params: [
-        coreContract.address,
-        activeAccount.address,
-        BigInt(amount),
-        BigInt(chainId),
-      ],
-    });
-
-    await sendAndConfirmTransaction({
-      account: activeAccount,
-      transaction: sendErc20Tx,
-    });
-  };
-
-  const crossChainTransferNotifications = useTxNotifications(
-    "Successfully submitted cross chain transfer",
-    "Failed to submit cross chain transfer",
-  );
-
-  const crossChainTransferMutation = useMutation({
-    mutationFn: crossChainTransfer,
-    onSuccess: crossChainTransferNotifications.onSuccess,
-    onError: crossChainTransferNotifications.onError,
-  });
-
   const columns: ColumnDef<CrossChain>[] = [
     {
       accessorKey: "network",
@@ -206,41 +147,7 @@ export function DataTable({
       header: "Status",
       cell: ({ row }) => {
         if (row.getValue("status") === "DEPLOYED") {
-          return (
-            <FormField
-              disabled // TODO: undo once the OP interop upgrade goes through
-              control={form.control}
-              name={`amounts.${row.getValue("chainId") as ChainId}`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <ToolTipLabel label="Coming soon">
-                      <div className="flex">
-                        <Input
-                          className="w-22 rounded-r-none border-r-0"
-                          placeholder="amount"
-                          {...field}
-                        />
-                        <Button
-                          type="button"
-                          disabled
-                          onClick={() =>
-                            crossChainTransferMutation.mutate(
-                              row.getValue("chainId"),
-                            )
-                          }
-                          className="rounded-lg rounded-l-none border border-l-0"
-                        >
-                          Transfer
-                        </Button>
-                      </div>
-                    </ToolTipLabel>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          );
+          return <p>Deployed</p>;
         }
         return (
           <Button
