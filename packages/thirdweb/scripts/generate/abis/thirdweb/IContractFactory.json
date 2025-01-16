@@ -1,4 +1,4 @@
 [
-  "event ProxyDeployed(address indexed implementation, address proxy, address indexed deployer)",
+  "event ProxyDeployed(address indexed implementation, address indexed proxy, address indexed deployer, bytes32 inputSalt, bytes data)",
   "function deployProxyByImplementation(address implementation, bytes data, bytes32 salt) returns (address)"
 ]

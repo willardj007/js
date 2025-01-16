@@ -1,8 +1,5 @@
 import { parseEventLogs } from "../../event/actions/parse-logs.js";
-import {
-  modifiedProxyDeployedEvent,
-  proxyDeployedEvent,
-} from "../../extensions/thirdweb/__generated__/IContractFactory/events/ProxyDeployed.js";
+import { proxyDeployedEvent } from "../../extensions/thirdweb/__generated__/IContractFactory/events/ProxyDeployed.js";
 import { deployProxyByImplementation } from "../../extensions/thirdweb/__generated__/IContractFactory/write/deployProxyByImplementation.js";
 import { eth_blockNumber } from "../../rpc/actions/eth_blockNumber.js";
 import { getRpcClient } from "../../rpc/rpc.js";
@@ -136,9 +133,7 @@ export async function deployViaAutoFactory(
   });
 
   // TODO: remove this once the modified version of TWCloneFactory has been published
-  const proxyEvent = salt?.startsWith("0x0101")
-    ? modifiedProxyDeployedEvent()
-    : proxyDeployedEvent();
+  const proxyEvent = proxyDeployedEvent();
   const decodedEvent = parseEventLogs({
     events: [proxyEvent],
     logs: receipt.logs,
