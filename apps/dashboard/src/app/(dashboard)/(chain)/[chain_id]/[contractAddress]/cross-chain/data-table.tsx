@@ -46,10 +46,12 @@ import { useForm } from "react-hook-form";
 import {
   ZERO_ADDRESS,
   defineChain,
+  eth_getCode,
   eth_getTransactionCount,
   getContract,
   getRpcClient,
   prepareContractCall,
+  prepareTransaction,
   readContract,
   sendAndConfirmTransaction,
   sendTransaction,
@@ -77,7 +79,14 @@ type CrossChain = {
   status: "DEPLOYED" | "NOT_DEPLOYED";
 };
 
-type ChainId = "84532" | "11155420" | "919" | "111557560" | "999999999";
+type ChainId =
+  | "84532"
+  | "11155420"
+  | "919"
+  | "111557560"
+  | "999999999"
+  | "11155111"
+  | "421614";
 
 const formSchema = z.object({
   amounts: z.object({
@@ -100,6 +109,7 @@ export function DataTable({
   modulesMetadata,
   initializeData,
   inputSalt,
+  initCode,
 }: {
   data: CrossChain[];
   coreMetadata: FetchDeployMetadataResult;
@@ -107,6 +117,7 @@ export function DataTable({
   modulesMetadata?: FetchDeployMetadataResult[];
   initializeData?: `0x${string}`;
   inputSalt?: `0x${string}`;
+  initCode?: `0x${string}`;
 }) {
   const activeAccount = useActiveAccount();
   const switchChain = useSwitchActiveWalletChain();
@@ -285,121 +296,148 @@ export function DataTable({
         (m) => m.name === "SuperChainInterop",
       );
 
-      const crosschainContractAddress = await deployContractfromDeployMetadata({
-        account: activeAccount,
-        chain,
-        client,
-        deployMetadata: coreMetadata,
-        isCrosschain: true,
-        initializeData,
-        salt,
-      });
-
-      verifyContract({
-        address: crosschainContractAddress,
-        chain,
-        client,
-      });
-
-      if (isCrosschain && modulesMetadata) {
-        const owner = await readContract({
-          contract: coreContract,
-          method: "function owner() view returns (address)",
-          params: [],
+      let crosschainContractAddress: string | undefined;
+      if (initCode) {
+        const tx = prepareTransaction({
+          client,
+          chain,
+          to: "0x4e59b44847b379578588920cA78FbF26c0B4956C",
+          data: initCode,
         });
 
-        const moduleInitializeParams = modulesMetadata.reduce(
-          (acc, mod) => {
-            const params = getModuleInstallParams(mod);
-            const paramNames = params
-              .map((param) => param.name)
-              .filter((p) => p !== undefined);
-            const returnVal: Record<string, string> = {};
+        await sendAndConfirmTransaction({
+          transaction: tx,
+          account: activeAccount,
+        });
 
-            // set connected wallet address as default "royaltyRecipient"
-            if (showRoyaltyFieldset(paramNames)) {
-              returnVal.royaltyRecipient = owner || "";
-              returnVal.royaltyBps = "0";
-              returnVal.transferValidator = ZERO_ADDRESS;
-            }
-
-            // set connected wallet address as default "primarySaleRecipient"
-            else if (showPrimarySaleFieldset(paramNames)) {
-              returnVal.primarySaleRecipient = owner || "";
-            }
-
-            // set superchain bridge address
-            else if (showSuperchainBridgeFieldset(paramNames)) {
-              returnVal.superchainBridge =
-                "0x4200000000000000000000000000000000000028"; // OP Superchain Bridge
-            }
-
-            acc[mod.name] = returnVal;
-            return acc;
+        const code = await eth_getCode(
+          getRpcClient({
+            client,
+            chain,
+          }),
+          {
+            address: coreContract.address,
           },
-          {} as Record<string, Record<string, string>>,
         );
 
-        const moduleDeployData = modulesMetadata.map((m) => ({
-          deployMetadata: m,
-          initializeParams: moduleInitializeParams[m.name],
-        }));
+        if (code && code.length > 2) {
+          crosschainContractAddress = coreContract.address;
+        }
+      } else {
+        crosschainContractAddress = await deployContractfromDeployMetadata({
+          account: activeAccount,
+          chain,
+          client,
+          deployMetadata: coreMetadata,
+          isCrosschain: true,
+          initializeData,
+          salt,
+        });
 
-        const contract = getContract({
+        verifyContract({
           address: crosschainContractAddress,
           chain,
           client,
         });
+        if (isCrosschain && modulesMetadata) {
+          const owner = await readContract({
+            contract: coreContract,
+            method: "function owner() view returns (address)",
+            params: [],
+          });
 
-        const rpcRequest = getRpcClient({
-          client,
-          chain,
-        });
-        const currentNonce = await eth_getTransactionCount(rpcRequest, {
-          address: activeAccount.address,
-        });
+          const moduleInitializeParams = modulesMetadata.reduce(
+            (acc, mod) => {
+              const params = getModuleInstallParams(mod);
+              const paramNames = params
+                .map((param) => param.name)
+                .filter((p) => p !== undefined);
+              const returnVal: Record<string, string> = {};
 
-        for (const [i, m] of moduleDeployData.entries()) {
-          let moduleData: `0x${string}` | undefined;
+              // set connected wallet address as default "royaltyRecipient"
+              if (showRoyaltyFieldset(paramNames)) {
+                returnVal.royaltyRecipient = owner || "";
+                returnVal.royaltyBps = "0";
+                returnVal.transferValidator = ZERO_ADDRESS;
+              }
 
-          const moduleInstallParams = m.deployMetadata.abi.find(
-            (abiType) =>
-              (abiType as AbiFunction).name === "encodeBytesOnInstall",
-          ) as AbiFunction | undefined;
+              // set connected wallet address as default "primarySaleRecipient"
+              else if (showPrimarySaleFieldset(paramNames)) {
+                returnVal.primarySaleRecipient = owner || "";
+              }
 
-          if (m.initializeParams && moduleInstallParams) {
-            moduleData = encodeAbiParameters(
-              (
-                moduleInstallParams.inputs as { name: string; type: string }[]
-              ).map((p) => ({
-                name: p.name,
-                type: p.type,
-              })),
-              Object.values(m.initializeParams),
-            );
+              // set superchain bridge address
+              else if (showSuperchainBridgeFieldset(paramNames)) {
+                returnVal.superchainBridge =
+                  "0x4200000000000000000000000000000000000028"; // OP Superchain Bridge
+              }
+
+              acc[mod.name] = returnVal;
+              return acc;
+            },
+            {} as Record<string, Record<string, string>>,
+          );
+
+          const moduleDeployData = modulesMetadata.map((m) => ({
+            deployMetadata: m,
+            initializeParams: moduleInitializeParams[m.name],
+          }));
+
+          const contract = getContract({
+            address: crosschainContractAddress,
+            chain,
+            client,
+          });
+
+          const rpcRequest = getRpcClient({
+            client,
+            chain,
+          });
+          const currentNonce = await eth_getTransactionCount(rpcRequest, {
+            address: activeAccount.address,
+          });
+
+          for (const [i, m] of moduleDeployData.entries()) {
+            let moduleData: `0x${string}` | undefined;
+
+            const moduleInstallParams = m.deployMetadata.abi.find(
+              (abiType) =>
+                (abiType as AbiFunction).name === "encodeBytesOnInstall",
+            ) as AbiFunction | undefined;
+
+            if (m.initializeParams && moduleInstallParams) {
+              moduleData = encodeAbiParameters(
+                (
+                  moduleInstallParams.inputs as { name: string; type: string }[]
+                ).map((p) => ({
+                  name: p.name,
+                  type: p.type,
+                })),
+                Object.values(m.initializeParams),
+              );
+            }
+
+            const installTransaction = installPublishedModule({
+              contract,
+              account: activeAccount,
+              moduleName: m.deployMetadata.name,
+              publisher: m.deployMetadata.publisher,
+              version: m.deployMetadata.version,
+              moduleData,
+              nonce: currentNonce + i,
+            });
+
+            const txResult = await sendTransaction({
+              transaction: installTransaction,
+              account: activeAccount,
+            });
+
+            await waitForReceipt(txResult);
+            // can't handle parallel transactions, so wait a bit
+            await new Promise((resolve) => setTimeout(resolve, 1000));
           }
-
-          const installTransaction = installPublishedModule({
-            contract,
-            account: activeAccount,
-            moduleName: m.deployMetadata.name,
-            publisher: m.deployMetadata.publisher,
-            version: m.deployMetadata.version,
-            moduleData,
-            nonce: currentNonce + i,
-          });
-
-          const txResult = await sendTransaction({
-            transaction: installTransaction,
-            account: activeAccount,
-          });
-
-          await waitForReceipt(txResult);
-          // can't handle parallel transactions, so wait a bit
-          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
-
       deployStatusModal.nextStep();
       deployStatusModal.setViewContractLink(
         `/${chain.id}/${crosschainContractAddress}`,

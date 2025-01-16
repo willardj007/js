@@ -1,6 +1,10 @@
 import { fetchPublishedContractsFromDeploy } from "components/contract-components/fetchPublishedContractsFromDeploy";
 import { notFound } from "next/navigation";
-import { getContractEvents, prepareEvent } from "thirdweb";
+import {
+  eth_getTransactionByHash,
+  getContractEvents,
+  prepareEvent,
+} from "thirdweb";
 import { defineChain, getChainMetadata, localhost } from "thirdweb/chains";
 import {
   type FetchDeployMetadataResult,
@@ -52,12 +56,38 @@ export default async function Page(props: {
     },
   );
 
+  let initCode: `0x${string}` = "0x";
+  try {
+    const res = await fetch(
+      `https://contract.thirdweb-dev.com/creation/${contract.chain.id}/${contract.address}`,
+    );
+    const creationData = await res.json();
+
+    if (creationData.status === "1" && creationData.result[0]?.txHash) {
+      const creationTx = await eth_getTransactionByHash(
+        getRpcClient({
+          client: contract.client,
+          chain: defineChain(84532),
+        }),
+        { hash: creationData.result[0]?.txHash },
+      );
+
+      if (creationTx.to === "0x4e59b44847b379578588920cA78FbF26c0B4956C") {
+        initCode = creationTx.input;
+      }
+    }
+  } catch (e) {
+    console.debug(e);
+  }
+
   const topOPStackTestnetChainIds = [
     84532, // Base
     11155420, // OP testnet
     919, // Mode Network
     111557560, // Cyber
     999999999, // Zora
+    11155111, // sepolia
+    421614,
   ];
 
   const chainsDeployedOn = await Promise.all(
@@ -143,6 +173,7 @@ export default async function Page(props: {
       inputSalt={event?.args.inputSalt}
       data={chainsDeployedOn}
       coreContract={contract}
+      initCode={initCode}
     />
   );
 }
