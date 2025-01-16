@@ -95,6 +95,8 @@ const formSchema = z.object({
     "919": z.string(),
     "111557560": z.string(),
     "999999999": z.string(),
+    "11155111": z.string(),
+    "421614": z.string(),
   }),
 });
 type FormSchema = z.output<typeof formSchema>;
@@ -136,6 +138,8 @@ export function DataTable({
         "919": "", // Mode Network
         "111557560": "", // Cyber
         "999999999": "", // Zora
+        "11155111": "", // Sepolia
+        "421614": "",
       },
     },
   });
