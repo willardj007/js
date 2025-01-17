@@ -111,7 +111,7 @@ export default async function Page(props: {
   let inputSalt: `0x${string}` | undefined;
   let creationBlockNumber: bigint | undefined;
 
-  if (isProxyDeploy && twCloneFactoryContract) {
+  if (twCloneFactoryContract) {
     const events = await getContractEvents({
       contract: twCloneFactoryContract,
       events: [ProxyDeployedEvent],
