@@ -1,6 +1,6 @@
 import { parseEventLogs } from "../../event/actions/parse-logs.js";
-import { proxyDeployedEvent } from "../../extensions/thirdweb/__generated__/IContractFactory/events/ProxyDeployed.js";
-import { deployProxyByImplementation } from "../../extensions/thirdweb/__generated__/IContractFactory/write/deployProxyByImplementation.js";
+import { proxyDeployedV2Event } from "../../extensions/thirdweb/__generated__/IContractFactory/events/ProxyDeployedV2.js";
+import { deployProxyByImplementationV2 } from "../../extensions/thirdweb/__generated__/IContractFactory/write/deployProxyByImplementationV2.js";
 import { eth_blockNumber } from "../../rpc/actions/eth_blockNumber.js";
 import { getRpcClient } from "../../rpc/rpc.js";
 import { encode } from "../../transaction/actions/encode.js";
@@ -30,7 +30,7 @@ export function prepareAutoFactoryDeployTransaction(
     salt?: string;
   },
 ) {
-  return deployProxyByImplementation({
+  return deployProxyByImplementationV2({
     contract: args.cloneFactoryContract,
     async asyncParams() {
       const rpcRequest = getRpcClient({
@@ -41,8 +41,8 @@ export function prepareAutoFactoryDeployTransaction(
         ? args.salt.startsWith("0x") && args.salt.length === 66
           ? (args.salt as `0x${string}`)
           : keccakId(args.salt)
-        : (`0x0101${toHex(blockNumber, {
-            size: 30,
+        : (`0x7${toHex(blockNumber, {
+            size: 31,
           }).replace(/^0x/, "")}` as `0x${string}`);
 
       if (args.isCrosschain) {
@@ -56,6 +56,7 @@ export function prepareAutoFactoryDeployTransaction(
           data: args.initializeData,
           implementation: args.implementationAddress,
           salt,
+          extraData: "0x",
         } as const;
       }
 
@@ -73,6 +74,7 @@ export function prepareAutoFactoryDeployTransaction(
         data: await encode(args.initializeTransaction),
         implementation,
         salt,
+        extraData: "0x",
       } as const;
     },
   });
@@ -132,8 +134,7 @@ export async function deployViaAutoFactory(
     account,
   });
 
-  // TODO: remove this once the modified version of TWCloneFactory has been published
-  const proxyEvent = proxyDeployedEvent();
+  const proxyEvent = proxyDeployedV2Event();
   const decodedEvent = parseEventLogs({
     events: [proxyEvent],
     logs: receipt.logs,
