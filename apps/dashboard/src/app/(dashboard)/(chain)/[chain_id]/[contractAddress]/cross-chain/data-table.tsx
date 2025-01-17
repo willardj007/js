@@ -182,10 +182,6 @@ export function DataTable({
       deployStatusModal.setViewContractLink("");
       deployStatusModal.open(steps);
 
-      const isCrosschain = !!modulesMetadata?.find(
-        (m) => m.name === "SuperChainInterop",
-      );
-
       let crosschainContractAddress: string | undefined;
       if (initCode && isDirectDeploy) {
         const tx = prepareTransaction({
@@ -229,7 +225,7 @@ export function DataTable({
           chain,
           client,
         });
-        if (isCrosschain && modulesMetadata) {
+        if (modulesMetadata) {
           for (const m of modulesMetadata) {
             await getOrDeployInfraForPublishedContract({
               chain,

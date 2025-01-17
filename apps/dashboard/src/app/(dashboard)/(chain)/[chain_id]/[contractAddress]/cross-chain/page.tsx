@@ -92,10 +92,12 @@ export default async function Page(props: {
 
       initCode = creationTx.input;
       isDirectDeploy =
-        creationTx.to === "0x4e59b44847b379578588920cA78FbF26c0B4956C";
+        creationTx.to?.toLowerCase() ===
+        "0x4e59b44847b379578588920cA78FbF26c0B4956C".toLowerCase();
       isProxyDeploy =
         !!twCloneFactoryContract &&
-        creationTx.to === twCloneFactoryContract?.address;
+        creationTx.to?.toLowerCase() ===
+          twCloneFactoryContract?.address.toLowerCase();
     }
   } catch (e) {
     console.debug(e);
@@ -117,7 +119,10 @@ export default async function Page(props: {
       events: [ProxyDeployedEvent],
       blockRange: 123456n,
     });
-    const event = events.find((e) => e.args.proxy === params.contractAddress);
+    const event = events.find(
+      (e) =>
+        e.args.proxy.toLowerCase() === params.contractAddress.toLowerCase(),
+    );
 
     initializeData = event?.args.data;
     inputSalt = event?.args.inputSalt;
