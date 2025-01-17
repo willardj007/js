@@ -7,7 +7,7 @@ import {
   parseEventLogs,
   prepareEvent,
 } from "thirdweb";
-import { defineChain, getChainMetadata, localhost } from "thirdweb/chains";
+import { defineChain, getChainMetadata } from "thirdweb/chains";
 import {
   type FetchDeployMetadataResult,
   getContract,
@@ -101,12 +101,6 @@ export default async function Page(props: {
     }
   } catch (e) {
     console.debug(e);
-  }
-
-  if (!isDirectDeploy && !isProxyDeploy) {
-    if (contract.chain.id === localhost.id) {
-      return <div>Not supported</div>;
-    }
   }
 
   let initializeData: `0x${string}` | undefined;
@@ -241,6 +235,10 @@ export default async function Page(props: {
           ),
         )) as FetchDeployMetadataResult[])
       : undefined;
+  }
+
+  if (!isDirectDeploy && !isProxyDeploy && !initializeData) {
+    return <div>Multi chain deployments not available</div>;
   }
 
   return (
