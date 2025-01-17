@@ -41,7 +41,7 @@ export function prepareAutoFactoryDeployTransaction(
         ? args.salt.startsWith("0x") && args.salt.length === 66
           ? (args.salt as `0x${string}`)
           : keccakId(args.salt)
-        : (`0x7${toHex(blockNumber, {
+        : (`0x07${toHex(blockNumber, {
             size: 31,
           }).replace(/^0x/, "")}` as `0x${string}`);
 

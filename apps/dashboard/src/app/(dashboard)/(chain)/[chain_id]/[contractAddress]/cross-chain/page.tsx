@@ -49,7 +49,7 @@ export default async function Page(props: {
 
   const ProxyDeployedEvent = prepareEvent({
     signature:
-      "event ProxyDeployed(address indexed implementation, address indexed proxy, address indexed deployer, bytes32 inputSalt, bytes data)",
+      "event ProxyDeployedV2(address indexed implementation, address indexed proxy, address indexed deployer, bytes32 inputSalt, bytes data, bytes extraData)",
   });
 
   const twCloneFactoryContract = await getDeployedCloneFactoryContract({
