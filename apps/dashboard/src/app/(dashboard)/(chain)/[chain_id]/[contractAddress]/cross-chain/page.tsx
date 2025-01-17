@@ -70,7 +70,6 @@ export default async function Page(props: {
   let initCode: `0x${string}` = "0x";
   let creationTxReceipt: TransactionReceipt | undefined;
   let isDirectDeploy = false;
-  let isProxyDeploy = false;
   try {
     const res = await fetch(
       `https://contract.thirdweb-dev.com/creation/${contract.chain.id}/${contract.address}`,
@@ -94,10 +93,6 @@ export default async function Page(props: {
       isDirectDeploy =
         creationTx.to?.toLowerCase() ===
         "0x4e59b44847b379578588920cA78FbF26c0B4956C".toLowerCase();
-      isProxyDeploy =
-        !!twCloneFactoryContract &&
-        creationTx.to?.toLowerCase() ===
-          twCloneFactoryContract?.address.toLowerCase();
     }
   } catch (e) {
     console.debug(e);
@@ -237,7 +232,7 @@ export default async function Page(props: {
       : undefined;
   }
 
-  if (!isDirectDeploy && !isProxyDeploy && !initializeData) {
+  if (!isDirectDeploy && !initializeData) {
     return <div>Multi chain deployments not available</div>;
   }
 
