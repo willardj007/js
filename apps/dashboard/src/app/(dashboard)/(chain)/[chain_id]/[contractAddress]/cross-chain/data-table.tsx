@@ -55,15 +55,6 @@ type CrossChain = {
   status: "DEPLOYED" | "NOT_DEPLOYED";
 };
 
-type ChainId =
-  | "84532"
-  | "11155420"
-  | "919"
-  | "111557560"
-  | "999999999"
-  | "11155111"
-  | "421614";
-
 const formSchema = z.object({
   amounts: z.object({
     "84532": z.string(),
