@@ -28,6 +28,7 @@ import {
 import {} from "components/contract-components/contract-deploy-form/modular-contract-default-modules-fieldset";
 import { useTxNotifications } from "hooks/useTxNotifications";
 import Link from "next/link";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   defineChain,
@@ -47,6 +48,7 @@ import {
 import { useActiveAccount, useSwitchActiveWalletChain } from "thirdweb/react";
 import { concatHex, padHex } from "thirdweb/utils";
 import { z } from "zod";
+import { SingleNetworkSelector } from "./single-network-selector";
 
 type CrossChain = {
   id: number;
@@ -94,6 +96,7 @@ export function DataTable({
     "Successfully deployed contract",
     "Failed to deploy contract",
   );
+  const [tableData, setTableData] = useState(data);
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
@@ -153,7 +156,7 @@ export function DataTable({
   ];
 
   const table = useReactTable({
-    data,
+    data: tableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -248,49 +251,78 @@ export function DataTable({
     }
   };
 
+  const handleAddRow = (chain: { chainId: number; name: string }) => {
+    const existingChain = tableData.find(
+      (row) => row.chainId === chain.chainId,
+    );
+    if (existingChain) {
+      return;
+    }
+
+    const newRow: CrossChain = {
+      id: chain.chainId,
+      network: chain.name,
+      chainId: chain.chainId,
+      status: "NOT_DEPLOYED",
+    };
+
+    setTableData((prevData) => [...prevData, newRow]);
+  };
+
   return (
     <Form {...form}>
       <form>
-        <TableContainer>
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <DeployStatusModal deployStatusModal={deployStatusModal} />
-        </TableContainer>
+        <div
+          style={{
+            maxHeight: "500px",
+            overflowY: "auto",
+          }}
+        >
+          <TableContainer>
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => {
+                      return (
+                        <TableHead key={header.id}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext(),
+                              )}
+                        </TableHead>
+                      );
+                    })}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <DeployStatusModal deployStatusModal={deployStatusModal} />
+          </TableContainer>
+        </div>
+
+        <div className="mt-4">
+          <SingleNetworkSelector onAddRow={handleAddRow} className="w-full" />
+        </div>
       </form>
     </Form>
   );
