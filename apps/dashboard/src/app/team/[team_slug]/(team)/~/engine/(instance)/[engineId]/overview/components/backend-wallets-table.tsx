@@ -1,4 +1,5 @@
 import { WalletAddress } from "@/components/blocks/wallet-address";
+import { Spinner } from "@/components/ui/Spinner/Spinner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -182,6 +183,7 @@ export const BackendWalletsTable: React.FC<BackendWalletsTableProps> = ({
         isPending={isPending}
         isFetched={isFetched}
         tableScrollableClassName="max-h-[1000px]"
+        tableContainerClassName="border-x-0 rounded-t-none border-b-0"
         onMenuClick={[
           {
             icon: <PencilIcon className="size-4" />,
@@ -669,7 +671,9 @@ function DeleteModal({
             variant="destructive"
             onClick={onClick}
             disabled={isLocalWallet && !ackDeletion}
+            className="gap-2"
           >
+            {deleteBackendWallet.isPending && <Spinner className="size-4" />}
             Delete
           </Button>
         </ModalFooter>
