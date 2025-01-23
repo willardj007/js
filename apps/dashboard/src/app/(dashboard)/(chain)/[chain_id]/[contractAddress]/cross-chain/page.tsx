@@ -118,19 +118,13 @@ export default async function Page(props: {
     creationBlockNumber = event?.blockNumber;
   }
 
-  const topOPStackTestnetChainIds = [
-    84532, // Base
-    11155420, // OP testnet
-    919, // Mode Network
-    111557560, // Cyber
-    999999999, // Zora
-    11155111, // sepolia
-    421614,
+  const defaultChains = [
+    1, 137, 8453, 10, 42161, 11155111, 84532, 11155420, 421614,
   ];
 
   const chainsDeployedOn = (
     await Promise.all(
-      topOPStackTestnetChainIds.map(async (c) => {
+      defaultChains.map(async (c) => {
         // eslint-disable-next-line no-restricted-syntax
         const chain = defineChain(c);
 
