@@ -28,7 +28,7 @@ import {
 import {} from "components/contract-components/contract-deploy-form/modular-contract-default-modules-fieldset";
 import { useTxNotifications } from "hooks/useTxNotifications";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   defineChain,
@@ -96,7 +96,37 @@ export function DataTable({
     "Successfully deployed contract",
     "Failed to deploy contract",
   );
-  const [tableData, setTableData] = useState(data);
+
+  const [customChainData, setCustomChainData] = useState<CrossChain[]>(() => {
+    try {
+      const storedData = window.localStorage.getItem(
+        `crosschain-${coreContract.address}`,
+      );
+      return storedData ? JSON.parse(storedData) : [];
+    } catch (error) {
+      console.error("Failed to read from localStorage", error);
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        `crosschain-${coreContract.address}`,
+        JSON.stringify(customChainData),
+      );
+    } catch (error) {
+      console.error("Failed to write to localStorage", error);
+    }
+  }, [customChainData, coreContract.address]);
+
+  const mergedChainData = useMemo(() => {
+    const chainMap = new Map<number, CrossChain>();
+    for (const item of [...data, ...customChainData]) {
+      chainMap.set(item.chainId, item); // Deduplicate by chainId
+    }
+    return Array.from(chainMap.values());
+  }, [data, customChainData]);
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
@@ -156,7 +186,7 @@ export function DataTable({
   ];
 
   const table = useReactTable({
-    data: tableData,
+    data: mergedChainData,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -246,14 +276,9 @@ export function DataTable({
       );
       deployStatusModal.close();
 
-      setTableData((prevData) =>
+      setCustomChainData((prevData) =>
         prevData.map((row) =>
-          row.chainId === chainId
-            ? {
-                ...row,
-                status: "DEPLOYED",
-              }
-            : row,
+          row.chainId === chainId ? { ...row, status: "DEPLOYED" } : row,
         ),
       );
     } catch (e) {
@@ -264,7 +289,7 @@ export function DataTable({
   };
 
   const handleAddRow = (chain: { chainId: number; name: string }) => {
-    const existingChain = tableData.find(
+    const existingChain = customChainData.find(
       (row) => row.chainId === chain.chainId,
     );
     if (existingChain) {
@@ -278,7 +303,9 @@ export function DataTable({
       status: "NOT_DEPLOYED",
     };
 
-    setTableData((prevData) => [...prevData, newRow]);
+    if (!customChainData.some((row) => row.chainId === chain.chainId)) {
+      setCustomChainData((prevData) => [...prevData, newRow]);
+    }
   };
 
   return (
