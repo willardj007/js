@@ -244,6 +244,18 @@ export function DataTable({
       deployStatusModal.setViewContractLink(
         `/${chain.id}/${crosschainContractAddress}`,
       );
+      deployStatusModal.close();
+
+      setTableData((prevData) =>
+        prevData.map((row) =>
+          row.chainId === chainId
+            ? {
+                ...row,
+                status: "DEPLOYED",
+              }
+            : row,
+        ),
+      );
     } catch (e) {
       onError(e);
       console.error("failed to deploy contract", e);

@@ -7,11 +7,7 @@ import {
   parseEventLogs,
   prepareEvent,
 } from "thirdweb";
-import {
-  type ChainMetadata,
-  defineChain,
-  getChainMetadata,
-} from "thirdweb/chains";
+import { defineChain, getChainMetadata } from "thirdweb/chains";
 import {
   type FetchDeployMetadataResult,
   getContract,
@@ -33,19 +29,6 @@ export function getModuleInstallParams(mod: FetchDeployMetadataResult) {
       .find((f) => f.name === "encodeBytesOnInstall")?.inputs || []
   );
 }
-
-async function fetchChainsFromApi() {
-  const res = await fetch("https://api.thirdweb.com/v1/chains");
-  const json = await res.json();
-
-  if (json.error) {
-    throw new Error(json.error.message);
-  }
-
-  return json.data as ChainMetadata[];
-}
-
-const allChains = await fetchChainsFromApi();
 
 export default async function Page(props: {
   params: Promise<{
@@ -135,11 +118,21 @@ export default async function Page(props: {
     creationBlockNumber = event?.blockNumber;
   }
 
+  const topOPStackTestnetChainIds = [
+    84532, // Base
+    11155420, // OP testnet
+    919, // Mode Network
+    111557560, // Cyber
+    999999999, // Zora
+    11155111, // sepolia
+    421614,
+  ];
+
   const chainsDeployedOn = (
     await Promise.all(
-      allChains.map(async (c) => {
+      topOPStackTestnetChainIds.map(async (c) => {
         // eslint-disable-next-line no-restricted-syntax
-        const chain = defineChain(c.chainId);
+        const chain = defineChain(c);
 
         try {
           const chainMetadata = await getChainMetadata(chain);
