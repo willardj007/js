@@ -109,6 +109,7 @@ export function DataTable({
     }
   });
 
+  // eslint-disable-next-line no-restricted-syntax
   useEffect(() => {
     try {
       window.localStorage.setItem(
