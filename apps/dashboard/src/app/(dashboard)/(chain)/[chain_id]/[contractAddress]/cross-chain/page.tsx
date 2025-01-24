@@ -1,4 +1,5 @@
 import { fetchPublishedContractsFromDeploy } from "components/contract-components/fetchPublishedContractsFromDeploy";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   eth_getTransactionByHash,
@@ -239,7 +240,17 @@ export default async function Page(props: {
   }
 
   if (!isDirectDeploy && !initializeData) {
-    return <div>Multi chain deployments not available</div>;
+    return (
+      <div>
+        Multi-chain deployments are not available for this contract. Deploy a
+        new contract to enable this functionality.
+        <br />
+        <br />
+        <Link href="/explore" target="_blank">
+          Explore contracts
+        </Link>
+      </div>
+    );
   }
 
   return (
