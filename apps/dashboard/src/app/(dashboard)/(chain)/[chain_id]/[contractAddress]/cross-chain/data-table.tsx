@@ -255,7 +255,7 @@ export function DataTable({
         });
 
         verifyContract({
-          address: crosschainContractAddress,
+          address: crosschainContractAddress as `0x${string}`,
           chain,
           client,
         });

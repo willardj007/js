@@ -519,7 +519,7 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
           chain: walletChain,
         });
         const currentNonce = await eth_getTransactionCount(rpcRequest, {
-          address: activeAccount.address,
+          address: activeAccount.address as `0x${string}`,
         });
 
         for (const [i, m] of moduleDeployData.entries()) {
