@@ -655,11 +655,13 @@ export const CustomContractForm: React.FC<CustomContractFormProps> = ({
               const contractAddr = await deployMutation.mutateAsync(formData);
 
               // send verification request - no need to await
-              verifyContract({
-                address: contractAddr,
-                chain: walletChain,
-                client: thirdwebClient,
-              });
+              verifyContract(
+                getContract({
+                  address: contractAddr,
+                  chain: walletChain,
+                  client: thirdwebClient,
+                }),
+              );
 
               trackEvent({
                 category: "custom-contract",
