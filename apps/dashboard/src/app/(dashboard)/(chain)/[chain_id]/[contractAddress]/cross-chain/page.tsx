@@ -251,15 +251,26 @@ export default async function Page(props: {
   }
 
   return (
-    <DataTable
-      coreMetadata={coreMetadata}
-      modulesMetadata={modulesMetadata}
-      initializeData={initializeData}
-      inputSalt={inputSalt}
-      data={chainsDeployedOn}
-      coreContract={contract}
-      initCode={initCode}
-      isDirectDeploy={isDirectDeploy}
-    />
+    <>
+      <div>
+        <h2 className="mb-1 font-bold text-2xl tracking-tight">
+          Deploy Cross-chain
+        </h2>
+        <p className="text-muted-foreground">
+          Deterministically deploy your contracts on multiple networks.
+        </p>
+      </div>
+      <div className="h-10" />
+      <DataTable
+        coreMetadata={coreMetadata}
+        modulesMetadata={modulesMetadata}
+        initializeData={initializeData}
+        inputSalt={inputSalt}
+        data={chainsDeployedOn}
+        coreContract={contract}
+        initCode={initCode}
+        isDirectDeploy={isDirectDeploy}
+      />
+    </>
   );
 }

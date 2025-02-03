@@ -75,7 +75,9 @@ export function SingleNetworkSelector(props: {
       options={options}
       onValueChange={handleChange}
       placeholder={
-        allChains.length === 0 ? "Loading Chains..." : "Search Chains"
+        allChains.length === 0
+          ? "Loading chains..."
+          : "Select chain to deploy on"
       }
       overrideSearchFn={searchFn}
       renderOption={renderOption}

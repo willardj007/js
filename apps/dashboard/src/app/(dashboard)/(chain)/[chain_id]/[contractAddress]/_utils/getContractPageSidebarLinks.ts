@@ -25,7 +25,7 @@ export function getContractPageSidebarLinks(data: {
       exactMatch: true,
     },
     {
-      label: "Cross Chain",
+      label: "Cross Chain (Beta)",
       href: `${layoutPrefix}/cross-chain`,
       exactMatch: true,
     },
