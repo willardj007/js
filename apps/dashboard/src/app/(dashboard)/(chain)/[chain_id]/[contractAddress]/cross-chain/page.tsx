@@ -1,5 +1,4 @@
 import { fetchPublishedContractsFromDeploy } from "components/contract-components/fetchPublishedContractsFromDeploy";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   eth_getTransactionByHash,
@@ -162,7 +161,7 @@ export default async function Page(props: {
     )
   ).filter((c) => c.status === "DEPLOYED");
 
-  let coreMetadata;
+  let coreMetadata: FetchDeployMetadataResult | undefined;
   try {
     coreMetadata = (
       await fetchPublishedContractsFromDeploy({
@@ -170,9 +169,9 @@ export default async function Page(props: {
         client: contract.client,
       })
     ).at(-1) as FetchDeployMetadataResult;
-  } catch  {}
+  } catch {}
 
-  if(!coreMetadata) {
+  if (!coreMetadata) {
     return NoCrossChainPrompt();
   }
 
