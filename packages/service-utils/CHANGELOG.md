@@ -1,5 +1,43 @@
 # @thirdweb-dev/service-utils
 
+## 0.8.3
+
+### Patch Changes
+
+- [#6121](https://github.com/thirdweb-dev/js/pull/6121) [`6ed2fd1`](https://github.com/thirdweb-dev/js/commit/6ed2fd13de1638bcf1c28fd4fdbeb00c0d449994) Thanks [@arcoraven](https://github.com/arcoraven)! - [service-utils] import LZ4 codec
+
+- [#6120](https://github.com/thirdweb-dev/js/pull/6120) [`a22457a`](https://github.com/thirdweb-dev/js/commit/a22457a69cc6667ac13599d10ebddc41ceafa0ff) Thanks [@arcoraven](https://github.com/arcoraven)! - [service-utils] Expose kafkajs config
+
+## 0.8.2
+
+### Patch Changes
+
+- [#6113](https://github.com/thirdweb-dev/js/pull/6113) [`6818cba`](https://github.com/thirdweb-dev/js/commit/6818cbabf25ce73d09dfc971ae793cd9844ceca7) Thanks [@arcoraven](https://github.com/arcoraven)! - Change UsageV2 to per-product topics
+
+## 0.8.1
+
+### Patch Changes
+
+- [#6106](https://github.com/thirdweb-dev/js/pull/6106) [`3361140`](https://github.com/thirdweb-dev/js/commit/33611409b0efd58803be4a96194f5872ddf4bde0) Thanks [@jnsdls](https://github.com/jnsdls)! - updated dependencies
+
+## 0.8.0
+
+### Minor Changes
+
+- [#6101](https://github.com/thirdweb-dev/js/pull/6101) [`e8892b1`](https://github.com/thirdweb-dev/js/commit/e8892b152f70d3024dfbefcddcfa74a69a12bdd0) Thanks [@jnsdls](https://github.com/jnsdls)! - pass `team` instead of `project` to `rateLimit`
+
+## 0.7.3
+
+### Patch Changes
+
+- [#6084](https://github.com/thirdweb-dev/js/pull/6084) [`b5e327e`](https://github.com/thirdweb-dev/js/commit/b5e327e5ec745ce1beb9a79404fa5b11d0c5588e) Thanks [@jnsdls](https://github.com/jnsdls)! - add `billingPlanVersion` to `TeamResponse`
+
+## 0.7.2
+
+### Patch Changes
+
+- [#6079](https://github.com/thirdweb-dev/js/pull/6079) [`1616b7f`](https://github.com/thirdweb-dev/js/commit/1616b7f6198d43fc48a1269b1cca93958cbf7dba) Thanks [@jnsdls](https://github.com/jnsdls)! - updated dependencies
+
 ## 0.7.1
 
 ### Patch Changes

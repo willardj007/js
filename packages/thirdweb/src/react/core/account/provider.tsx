@@ -1,10 +1,8 @@
 "use client";
 
-import type { Address } from "abitype";
 import type React from "react";
 import { createContext, useContext } from "react";
-import type { ThirdwebClient } from "../../../../../client/client.js";
-
+import type { ThirdwebClient } from "../../../client/client.js";
 /**
  * Props for the <AccountProvider /> component
  * @component
@@ -14,7 +12,7 @@ export type AccountProviderProps = {
   /**
    * The user's wallet address
    */
-  address: Address;
+  address: string;
   /**
    * thirdweb Client
    */
@@ -35,7 +33,7 @@ const AccountProviderContext = /* @__PURE__ */ createContext<
  * ```tsx
  * import { AccountProvider, AccountAvatar, AccountName, AccountAddress  } from "thirdweb/react";
  *
- * <AccountProvider>
+ * <AccountProvider address="0x..." client={client}>
  *   <AccountAvatar />
  *   <AccountName />
  *   <AccountAddress />

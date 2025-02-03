@@ -11,8 +11,7 @@ import {
 import { getSocialProfiles } from "../../../../../social/profiles.js";
 import type { SocialProfile } from "../../../../../social/types.js";
 import { parseAvatarRecord } from "../../../../../utils/ens/avatar.js";
-import { useAccountContext } from "./provider.js";
-
+import { useAccountContext } from "../../../../core/account/provider.js";
 /**
  * Props for the AccountAvatar component
  * @component
