@@ -81,6 +81,7 @@ export function SingleNetworkSelector(props: {
       renderOption={renderOption}
       className={props.className}
       disabled={allChains.length === 0}
+      closeOnSelect={true}
     />
   );
 }
