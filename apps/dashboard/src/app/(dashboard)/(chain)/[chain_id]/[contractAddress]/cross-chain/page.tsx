@@ -22,6 +22,7 @@ import { type AbiFunction, decodeFunctionData } from "thirdweb/utils";
 import { getContractPageParamsInfo } from "../_utils/getContractFromParams";
 import { getContractPageMetadata } from "../_utils/getContractPageMetadata";
 import { DataTable } from "./data-table";
+import { NoCrossChainPrompt } from "./no-crosschain-prompt";
 
 export function getModuleInstallParams(mod: FetchDeployMetadataResult) {
   return (
@@ -161,12 +162,19 @@ export default async function Page(props: {
     )
   ).filter((c) => c.status === "DEPLOYED");
 
-  const coreMetadata = (
-    await fetchPublishedContractsFromDeploy({
-      contract,
-      client: contract.client,
-    })
-  ).at(-1) as FetchDeployMetadataResult;
+  let coreMetadata;
+  try {
+    coreMetadata = (
+      await fetchPublishedContractsFromDeploy({
+        contract,
+        client: contract.client,
+      })
+    ).at(-1) as FetchDeployMetadataResult;
+  } catch  {}
+
+  if(!coreMetadata) {
+    return NoCrossChainPrompt();
+  }
 
   let modulesMetadata: FetchDeployMetadataResult[] | undefined;
 
@@ -240,17 +248,7 @@ export default async function Page(props: {
   }
 
   if (!isDirectDeploy && !initializeData) {
-    return (
-      <div>
-        Multi-chain deployments are not available for this contract. Deploy a
-        new contract to enable this functionality.
-        <br />
-        <br />
-        <Link href="/explore" target="_blank">
-          Explore contracts
-        </Link>
-      </div>
-    );
+    return NoCrossChainPrompt();
   }
 
   return (
