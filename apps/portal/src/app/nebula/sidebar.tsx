@@ -6,11 +6,11 @@ import {
   Braces,
   Code,
   ExternalLink,
+  Key,
   MessageCircleQuestion,
   PencilRuler,
   Rocket,
   Wrench,
-  Key
 } from "lucide-react";
 
 export const sidebar: SideBar = {
