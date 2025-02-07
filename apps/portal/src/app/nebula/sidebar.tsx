@@ -60,7 +60,7 @@ export const sidebar: SideBar = {
           name: "Sessions",
           href: "/nebula/key-concepts/sessions",
         },
-      ]
+      ],
     },
     {
       name: "API Reference",
@@ -137,8 +137,8 @@ export const sidebar: SideBar = {
         {
           name: "Unity",
           href: "/dotnet/nebula/quickstart",
-          icon: <UnityIcon/>
-        }
+          icon: <UnityIcon />,
+        },
       ],
     },
     {
