@@ -1,4 +1,15 @@
-import type { ServiceName } from "../node/index.js";
+export type UsageV2Source =
+  | "bundler"
+  | "engine"
+  | "insight"
+  | "nebula"
+  | "rpc"
+  | "sdk"
+  | "storage"
+  | "wallet";
+export function getTopicName(source: UsageV2Source) {
+  return `usage_v2.raw_${source}`;
+}
 
 export interface UsageV2Event {
   /**
@@ -51,8 +62,4 @@ export interface UsageV2Event {
    * Values can be boolean, number, string, Date, or null.
    */
   [key: string]: boolean | number | string | Date | null | undefined;
-}
-
-export function getTopicName(productName: ServiceName) {
-  return `usage_v2.raw_${productName}`;
 }
