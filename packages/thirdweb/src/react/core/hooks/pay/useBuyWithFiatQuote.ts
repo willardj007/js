@@ -85,26 +85,6 @@ export function useBuyWithFiatQuote(
       return getBuyWithFiatQuote(params);
     },
     enabled: !!params,
-    retry(failureCount, error) {
-      if (failureCount > 3) {
-        return false;
-      }
-      try {
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-        const serverError = (error as any).error as BuyWithFiatQuoteError;
-
-        if (serverError.code === "MINIMUM_PURCHASE_AMOUNT") {
-          return false;
-        }
-
-        if (serverError.statusCode === 404 || serverError.statusCode >= 500) {
-          return false;
-        }
-      } catch {
-        return true;
-      }
-
-      return true;
-    },
+    retry: false,
   });
 }
