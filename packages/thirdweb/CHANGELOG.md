@@ -1,5 +1,11 @@
 # thirdweb
 
+## 5.88.2
+
+### Patch Changes
+
+- [#6209](https://github.com/thirdweb-dev/js/pull/6209) [`97c9ab7`](https://github.com/thirdweb-dev/js/commit/97c9ab7e1caa8b3e006ecc7f64b54b392ba83eda) Thanks [@joaquim-verges](https://github.com/joaquim-verges)! - Batch approvals and swaps if using smart wallets
+
 ## 5.88.1
 
 ### Patch Changes

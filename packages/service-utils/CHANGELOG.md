@@ -1,5 +1,11 @@
 # @thirdweb-dev/service-utils
 
+## 0.8.8
+
+### Patch Changes
+
+- [#6207](https://github.com/thirdweb-dev/js/pull/6207) [`cbfe9ec`](https://github.com/thirdweb-dev/js/commit/cbfe9ec459b33884136ba23a87effd8ab4e99aeb) Thanks [@arcoraven](https://github.com/arcoraven)! - [service-utils] Allow client-side usageV2 reporting
+
 ## 0.8.7
 
 ### Patch Changes
